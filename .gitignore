@@ -1,0 +1,6 @@
+# dados brutos com respostas individuais: não versionar
+dados/*.csv
+dados/ocorrencias-*.md
+__pycache__/
+.DS_Store
+dist/aurora-link.html
