@@ -1,0 +1,503 @@
+{
+ "atualizado": "2026-09-24",
+ "nota": "Endereços, telefones e horários reunidos em 24/09/2026 em páginas oficiais (Prefeitura de Rio Claro, TJSP, Defensoria Pública de SP, Fundação Municipal de Saúde) e no OpenStreetMap. Confirme antes de divulgar.",
+ "tipos": {
+  "policia": {
+   "nome": "Polícia e Guarda",
+   "icone": "shield"
+  },
+  "mulher": {
+   "nome": "Políticas para mulheres",
+   "icone": "heart"
+  },
+  "justica": {
+   "nome": "Justiça e orientação jurídica",
+   "icone": "scale"
+  },
+  "social": {
+   "nome": "Assistência social",
+   "icone": "users"
+  },
+  "saude": {
+   "nome": "Saúde 24 horas",
+   "icone": "cross"
+  }
+ },
+ "grupos": [
+  {
+   "id": "registrar",
+   "titulo": "Registrar ocorrência e pedir medida protetiva",
+   "itens": [
+    "ddm",
+    "gcm",
+    "online"
+   ]
+  },
+  {
+   "id": "conversar",
+   "titulo": "Conversar e ter acompanhamento",
+   "itens": [
+    "mulher",
+    "creas",
+    "cras"
+   ]
+  },
+  {
+   "id": "juridico",
+   "titulo": "Orientação jurídica e Justiça",
+   "itens": [
+    "defensoria",
+    "anexo"
+   ]
+  },
+  {
+   "id": "saude",
+   "titulo": "Saúde",
+   "itens": [
+    "santacasa",
+    "upa29",
+    "chervezon"
+   ]
+  }
+ ],
+ "online": {
+  "id": "online",
+  "tipo": "policia",
+  "nome": "Delegacia Eletrônica",
+  "sub": "Polícia Civil de SP, pela internet",
+  "faz": [
+   "Registrar boletim de ocorrência",
+   "Pedir medida protetiva em casos de violência doméstica"
+  ],
+  "desc": "Funciona 24 horas, sem sair de casa. Vale para violência doméstica.",
+  "link": [
+   "Abrir a Delegacia Eletrônica",
+   "https://www.delegaciaeletronica.policiacivil.sp.gov.br"
+  ]
+ },
+ "pontos": [
+  {
+   "id": "ddm",
+   "tipo": "policia",
+   "nome": "Delegacia de Defesa da Mulher (DDM)",
+   "curto": "Delegacia da Mulher",
+   "sub": "Polícia Civil · Delegacia Seccional no mesmo prédio",
+   "faz": [
+    "Registrar boletim de ocorrência",
+    "Pedir medida protetiva"
+   ],
+   "desc": "Delegacia da Polícia Civil com atendimento voltado a mulheres.",
+   "end": "Av. 23, 1300, entre as Ruas 12 e 13",
+   "bairro": "Bairro do Estádio",
+   "tel": [
+    [
+     "(19) 3533-9009",
+     "DDM"
+    ],
+    [
+     "(19) 3532-1110",
+     "Delegacia Seccional"
+    ]
+   ],
+   "horario": "Dias úteis, em horário comercial. Ligue antes para confirmar.",
+   "dica": "Fora desse horário, registre no plantão da Polícia Civil ou pela Delegacia Eletrônica. Em perigo, ligue 190. Ao lado ficam a Guarda Civil Municipal e o 37º Batalhão da PM.",
+   "lat": -22.421971,
+   "lng": -47.564957,
+   "precisao": "endereco",
+   "fontes": [
+    [
+     "Prefeitura de Rio Claro: DDM em prédio próprio na Av. 23, entre as Ruas 12 e 13",
+     "https://imprensa.rioclaro.sp.gov.br/?p=36877"
+    ]
+   ]
+  },
+  {
+   "id": "gcm",
+   "tipo": "policia",
+   "nome": "Guarda Civil Municipal",
+   "curto": "Guarda Civil",
+   "sub": "Patrulha Maria da Penha",
+   "faz": [
+    "Pedir ajuda em emergência",
+    "Acompanhamento de quem tem medida protetiva"
+   ],
+   "desc": "A Guarda mantém a Patrulha Maria da Penha, que acompanha mulheres com medida protetiva.",
+   "end": "Rua 12, 26, esquina com a Av. 23",
+   "bairro": "Bairro do Estádio",
+   "tel": [
+    [
+     "153",
+     "Emergência, 24 horas"
+    ],
+    [
+     "(19) 3522-3900",
+     "Secretaria de Segurança"
+    ]
+   ],
+   "horario": "Emergência pelo 153, a qualquer hora. Atendimento na sede em dias úteis, das 9h às 11h e das 14h às 16h.",
+   "lat": -22.422106,
+   "lng": -47.564105,
+   "precisao": "exata",
+   "fontes": [
+    [
+     "Prefeitura de Rio Claro: Secretaria de Segurança e Defesa Civil",
+     "https://rioclaro.sp.gov.br/secretaria/secretaria-de-seguranca-e-defesa-civil/"
+    ]
+   ]
+  },
+  {
+   "id": "mulher",
+   "tipo": "mulher",
+   "nome": "Secretaria Municipal da Mulher",
+   "curto": "Secretaria da Mulher",
+   "sub": "Prefeitura de Rio Claro",
+   "faz": [
+    "Orientação e acolhimento",
+    "Encaminhamento para a rede de proteção"
+   ],
+   "desc": "Orienta mulheres sobre seus direitos e encaminha para os serviços da rede de proteção.",
+   "end": "Rua 7, 830, Condomínio Maria Manieiro, 2º andar, sala 205",
+   "bairro": "Centro",
+   "tel": [
+    [
+     "(19) 99956-3042",
+     "WhatsApp"
+    ]
+   ],
+   "horario": "Segunda a sexta, das 8h às 17h",
+   "dica": "No início de 2027 a Secretaria deve mudar para a Av. Visconde do Rio Claro, esquina com a Av. 26.",
+   "lat": -22.412896,
+   "lng": -47.562674,
+   "precisao": "endereco",
+   "fontes": [
+    [
+     "Prefeitura de Rio Claro: Secretaria da Mulher",
+     "https://rioclaro.sp.gov.br/secretaria/secretaria-da-mulher/"
+    ],
+    [
+     "Prefeitura de Rio Claro: novo prédio para atendimento às mulheres (ago/2026)",
+     "https://rioclaro.sp.gov.br/fundo-social/prefeitura-de-rio-claro-reforma-imovel-para-integrar-atendimento-as-mulheres/"
+    ]
+   ]
+  },
+  {
+   "id": "anexo",
+   "tipo": "justica",
+   "nome": "Anexo de Violência Doméstica",
+   "curto": "Anexo de Violência Doméstica",
+   "sub": "Tribunal de Justiça de SP",
+   "faz": [
+    "Decide medidas protetivas",
+    "Julga casos de violência doméstica"
+   ],
+   "desc": "Setor da Justiça dedicado à violência doméstica e familiar contra a mulher. Fica no mesmo prédio da Secretaria da Mulher.",
+   "end": "Rua 7, 830",
+   "bairro": "Centro",
+   "tel": [
+    [
+     "(19) 3524-4722",
+     "Fórum de Rio Claro"
+    ]
+   ],
+   "dica": "Você pode pedir medida protetiva na delegacia, sem advogado. O pedido chega a este juizado.",
+   "lat": -22.412896,
+   "lng": -47.562674,
+   "precisao": "endereco",
+   "fontes": [
+    [
+     "TJSP · Comesp: endereços das varas e anexos de violência doméstica",
+     "https://www.tjsp.jus.br/Comesp/Comesp/EnderecosDasVaras"
+    ]
+   ]
+  },
+  {
+   "id": "creas",
+   "tipo": "social",
+   "nome": "CREAS",
+   "curto": "CREAS",
+   "sub": "Centro de Referência Especializado de Assistência Social",
+   "faz": [
+    "Atendimento psicológico e social",
+    "Acompanhamento em casos de violência"
+   ],
+   "desc": "Apoio para mulheres e famílias que passaram por violência física, psicológica ou sexual. Não é preciso ter feito boletim de ocorrência.",
+   "end": "Rua 6, 640, entre as Avenidas 9 e 11",
+   "bairro": "Centro",
+   "tel": [
+    [
+     "(19) 3523-6513",
+     ""
+    ],
+    [
+     "(19) 3523-6420",
+     ""
+    ]
+   ],
+   "horario": "Segunda a sexta, das 8h às 17h",
+   "dica": "O CREAS também encaminha para acolhimento seguro quando a mulher precisa sair de casa.",
+   "lat": -22.414374,
+   "lng": -47.561188,
+   "precisao": "endereco",
+   "fontes": [
+    [
+     "Prefeitura de Rio Claro: Creas tem novo local de funcionamento (jul/2024)",
+     "https://rioclaro.sp.gov.br/desenvolvimento-social/creas-tem-novo-local-de-funcionamento/"
+    ],
+    [
+     "Secretaria de Desenvolvimento Social: Creas",
+     "https://desenvolvimentosocial.rc.sp.gov.br/?page_id=114"
+    ]
+   ]
+  },
+  {
+   "id": "defensoria",
+   "tipo": "justica",
+   "nome": "Defensoria Pública",
+   "curto": "Defensoria Pública",
+   "sub": "Defensoria Pública do Estado de SP",
+   "faz": [
+    "Orientação jurídica gratuita",
+    "Medida protetiva, divórcio, guarda e pensão"
+   ],
+   "desc": "Atendimento jurídico de graça. Em violência doméstica, a Defensoria atende sem exigir comprovação de renda.",
+   "end": "Rua 1, 659",
+   "bairro": "Saúde",
+   "tel": [
+    [
+     "0800 773 4340",
+     "Central da Defensoria, dias úteis, 7h às 19h"
+    ]
+   ],
+   "horario": "Agendamento pela assistente virtual no site, em dias úteis, das 8h às 18h. Casos urgentes têm prioridade.",
+   "link": [
+    "Site da Defensoria",
+    "https://www.defensoria.sp.def.br"
+   ],
+   "lat": -22.41296,
+   "lng": -47.556853,
+   "precisao": "endereco",
+   "fontes": [
+    [
+     "Defensoria Pública de SP: nova sede em Rio Claro (jul/2025)",
+     "https://www.defensoria.sp.def.br/noticias/-/noticia/6485928/defensoria-de-sp-inaugura-nova-sede-em-rio-claro-na-proxima-terca-feira-1-7"
+    ]
+   ]
+  },
+  {
+   "id": "santacasa",
+   "tipo": "saude",
+   "nome": "Pronto-Socorro Ginecológico e Obstétrico",
+   "curto": "PS Ginecológico",
+   "sub": "Santa Casa, anexo à Maternidade",
+   "faz": [
+    "Atendimento após violência sexual",
+    "Urgências ginecológicas e de gestantes"
+   ],
+   "desc": "Depois de uma violência sexual, procure atendimento de saúde em até 72 horas: há remédios que evitam HIV, outras infecções e gravidez. Não é preciso boletim de ocorrência para ser atendida.",
+   "end": "Av. 15, esquina com a Rua 2",
+   "bairro": "Centro",
+   "tel": [
+    [
+     "(19) 3535-7002",
+     ""
+    ],
+    [
+     "(19) 3535-7005",
+     ""
+    ]
+   ],
+   "horario": "24 horas",
+   "lat": -22.4157,
+   "lng": -47.55683,
+   "precisao": "endereco",
+   "fontes": [
+    [
+     "Fundação Municipal de Saúde: atendimento 24 horas",
+     "https://www.saude-rioclaro.org.br/atendimento%2024h.htm"
+    ]
+   ]
+  },
+  {
+   "id": "upa29",
+   "tipo": "saude",
+   "nome": "UPA 29",
+   "curto": "UPA 29",
+   "sub": "Unidade de Pronto Atendimento Dr. Olavo Narkevitz",
+   "faz": [
+    "Pronto-atendimento 24 horas"
+   ],
+   "desc": "Urgência para ferimentos e outras emergências de saúde.",
+   "end": "Av. 29, 1313",
+   "bairro": "Bairro do Estádio",
+   "tel": [
+    [
+     "(19) 3522-1818",
+     ""
+    ]
+   ],
+   "horario": "24 horas",
+   "lat": -22.425044,
+   "lng": -47.563759,
+   "precisao": "exata",
+   "fontes": []
+  },
+  {
+   "id": "chervezon",
+   "tipo": "saude",
+   "nome": "Pronto-Atendimento Jardim Chervezon",
+   "curto": "PA Chervezon",
+   "sub": "Fundação Municipal de Saúde",
+   "faz": [
+    "Pronto-atendimento 24 horas"
+   ],
+   "desc": "Urgência para ferimentos e outras emergências de saúde, na zona norte.",
+   "end": "Rua M-9, 66",
+   "bairro": "Jardim Chervezon",
+   "tel": [
+    [
+     "(19) 3533-7272",
+     ""
+    ],
+    [
+     "(19) 3533-7277",
+     ""
+    ]
+   ],
+   "horario": "24 horas",
+   "lat": -22.385877,
+   "lng": -47.564846,
+   "precisao": "exata",
+   "fontes": [
+    [
+     "Fundação Municipal de Saúde: urgência e emergência",
+     "https://www.saude-rioclaro.org.br/urgencia%20e%20emergencia.pdf"
+    ]
+   ]
+  },
+  {
+   "id": "cras_independencia",
+   "tipo": "social",
+   "grupo": "cras",
+   "nome": "CRAS Jardim Independência",
+   "curto": "CRAS Independência",
+   "end": "Rua M-7, 1031",
+   "bairro": "Jardim Hipódromo",
+   "tel": [
+    [
+     "(19) 3535-4558",
+     ""
+    ],
+    [
+     "(19) 3532-6991",
+     ""
+    ]
+   ],
+   "lat": -22.381891,
+   "lng": -47.564086,
+   "precisao": "exata"
+  },
+  {
+   "id": "cras_maepreta",
+   "tipo": "social",
+   "grupo": "cras",
+   "nome": "CRAS Mãe Preta",
+   "curto": "CRAS Mãe Preta",
+   "end": "Av. 1-MP, 159",
+   "bairro": "Jardim Mãe Preta",
+   "tel": [
+    [
+     "(19) 3524-9954",
+     ""
+    ]
+   ],
+   "lat": -22.375717,
+   "lng": -47.542866,
+   "precisao": "aproximada"
+  },
+  {
+   "id": "cras_brasilia",
+   "tipo": "social",
+   "grupo": "cras",
+   "nome": "CRAS Jardim Brasília",
+   "curto": "CRAS Brasília",
+   "end": "Av. 30, 290",
+   "bairro": "Jardim Brasília",
+   "tel": [
+    [
+     "(19) 3533-3752",
+     ""
+    ]
+   ],
+   "lat": -22.430688,
+   "lng": -47.580413,
+   "precisao": "aproximada"
+  },
+  {
+   "id": "cras_bomsucesso",
+   "tipo": "social",
+   "grupo": "cras",
+   "nome": "CRAS Bom Sucesso",
+   "curto": "CRAS Bom Sucesso",
+   "end": "Rua 5, 1201",
+   "bairro": "Jardim Bom Retiro",
+   "tel": [
+    [
+     "(19) 3531-3243",
+     ""
+    ]
+   ],
+   "lat": -22.404255,
+   "lng": -47.606228,
+   "precisao": "exata"
+  },
+  {
+   "id": "cras_terranova",
+   "tipo": "social",
+   "grupo": "cras",
+   "nome": "CRAS Terra Nova",
+   "curto": "CRAS Terra Nova",
+   "end": "Rua Marco Antonio Padula, 1043",
+   "bairro": "Terra Nova",
+   "tel": [
+    [
+     "(19) 3533-3556",
+     ""
+    ]
+   ],
+   "lat": -22.449178,
+   "lng": -47.583882,
+   "precisao": "exata"
+  },
+  {
+   "id": "cras_panorama",
+   "tipo": "social",
+   "grupo": "cras",
+   "nome": "CRAS Panorama",
+   "curto": "CRAS Panorama",
+   "end": "Rua 14, 2763",
+   "bairro": "Jardim Wenzel",
+   "tel": [
+    [
+     "(19) 3523-5112",
+     ""
+    ]
+   ]
+  }
+ ],
+ "cras": {
+  "nome": "CRAS",
+  "sub": "Centros de Referência de Assistência Social",
+  "faz": [
+   "Acolhimento e orientação perto de casa",
+   "Encaminhamento para o CREAS e outros serviços"
+  ],
+  "desc": "Atendem as famílias de cada região, orientam sobre direitos e benefícios e encaminham para os outros serviços da rede.",
+  "horario": "Segunda a sexta, das 8h às 17h",
+  "fontes": [
+   [
+    "Prefeitura de Rio Claro: Centros de Referência de Assistência Social",
+    "https://rioclaro.sp.gov.br/centro-ref-assistencia-social/"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,11 @@
+# dados brutos com respostas individuais: não versionar
+dados/*.csv
+dados/ocorrencias-*.md
+__pycache__/
+.DS_Store
+dist/aurora-link.html
+# ambiente e banco local (o banco guarda relatos: não versionar)
+.venv/
+.pytest_cache/
+backend/database/*.db
+backend/database/*.db-journal

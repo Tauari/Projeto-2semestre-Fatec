@@ -1,0 +1,26 @@
+Consulta usada no Overpass API (24/09/2026) para extrair o mapa de Rio Claro.
+Área: sul -22.475, oeste -47.645, norte -22.300, leste -47.495
+
+[out:json][timeout:180];
+(
+  way["highway"~"^(motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street|pedestrian|road)$"](-22.475,-47.645,-22.300,-47.495);
+  way["railway"="rail"](-22.475,-47.645,-22.300,-47.495);
+  way["waterway"~"^(river|stream|canal)$"](-22.475,-47.645,-22.300,-47.495);
+);
+out geom qt;
+
+[out:json][timeout:180];
+(
+  way["natural"="water"](-22.475,-47.645,-22.300,-47.495);
+  relation["natural"="water"](-22.475,-47.645,-22.300,-47.495);
+  way["landuse"="forest"](-22.475,-47.645,-22.300,-47.495);
+  relation["landuse"="forest"](-22.475,-47.645,-22.300,-47.495);
+  way["natural"="wood"](-22.475,-47.645,-22.300,-47.495);
+  way["leisure"~"^(park|nature_reserve)$"](-22.475,-47.645,-22.300,-47.495);
+  relation["leisure"~"^(park|nature_reserve)$"](-22.475,-47.645,-22.300,-47.495);
+  way["amenity"="university"](-22.475,-47.645,-22.300,-47.495);
+  relation["amenity"="university"](-22.475,-47.645,-22.300,-47.495);
+);
+out geom qt;
+
+Dados © colaboradores do OpenStreetMap, licença ODbL (openstreetmap.org/copyright).

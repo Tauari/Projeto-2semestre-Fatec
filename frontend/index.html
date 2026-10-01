@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Mapa colaborativo de segurança para mulheres em Rio Claro (SP): relatos anônimos, percepção da pesquisa, registros oficiais e onde pedir ajuda.">
+<meta name="theme-color" content="#2A2037">
+<title>Aurora Rio Claro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
+<meta name="aurora-api" content="/api/v1">
+<link rel="stylesheet" href="../vendor/leaflet.css">
+<link rel="stylesheet" href="shared/app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 3 3 6v15l6-3 6 3 6-3V3l-6 3-6-3z"/><path d="M9 3v15M15 6v15"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-3"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22z"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M19 3v4M17 5h4"/></symbol>
+    <symbol id="i-locate" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="2"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5M16 13H8M16 17H8"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-mod" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10M4 7h3c2 0 3.5-1 5-2 1.5 1 3 2 5 2h3"/><path d="m2 15 3-7 3 7a4 4 0 0 1-6 0zM16 15l3-7 3 7a4 4 0 0 1-6 0z"/></symbol>
+    <symbol id="i-cross" viewBox="0 0 24 24"><path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z"/></symbol>
+    <symbol id="i-nav" viewBox="0 0 24 24"><path d="m3 11 19-9-9 19-2-8z"/></symbol>
+    <symbol id="mark" viewBox="0 0 40 40"><path d="M25.6 14.2c-1.3-1.5-3.3-2.4-5.6-2.4-5 0-9.2 4.4-9.2 10.3 0 4.6 2.8 7.7 6.8 7.7 2.5 0 4.6-1.3 6-3.2l.3 2.7h4.3l2-15.7h-4.3zm-6.7 11.8c-2 0-3.4-1.6-3.4-4 0-3.2 2.2-5.8 4.9-5.8 2 0 3.4 1.6 3.4 4 0 3.2-2.2 5.8-4.9 5.8z" fill="currentColor" fill-rule="evenodd" stroke="none"/><path d="M31.5 3.5l1.1 3.2 3.2 1.1-3.2 1.1-1.1 3.2-1.1-3.2-3.2-1.1 3.2-1.1z" style="fill:var(--spark)" stroke="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="app" id="app">
+  <aside class="rail" aria-label="Navegação">
+    <div class="brand">
+      <svg class="mark" style="color:var(--spark)"><use href="#mark"/></svg>
+      <div><b>aurora</b><span>JUNTAS, MAIS ATENTAS</span></div>
+    </div>
+    <div class="place"><svg class="i"><use href="#i-pin"/></svg><span class="lb">Rio Claro, SP</span></div>
+    <nav class="nav" id="nav">
+      <button data-view="mapa" class="on" title="Explorar mapa"><svg class="i"><use href="#i-map"/></svg><span class="lb">Explorar mapa</span></button>
+      <button data-view="dados" title="Dados e pesquisa"><svg class="i"><use href="#i-chart"/></svg><span class="lb">Dados e pesquisa</span></button>
+      <button data-act="relatar" title="Registrar relato"><svg class="i"><use href="#i-chat"/></svg><span class="lb">Registrar relato</span></button>
+      <button data-view="alertas" title="Meus alertas"><svg class="i"><use href="#i-bell"/></svg><span class="lb">Meus alertas</span><span class="badge num" data-badge hidden></span></button>
+      <button data-view="moderacao" data-modnav hidden title="Moderação"><svg class="i"><use href="#i-mod"/></svg><span class="lb">Moderação</span></button>
+    </nav>
+    <div class="rail-support">
+      <svg class="i lg"><use href="#i-heart"/></svg>
+      <b>Você não está sozinha.</b>
+      <p>Encontre orientação e canais de acolhimento em Rio Claro.</p>
+      <button data-view="apoio" title="Preciso de apoio"><span>Preciso de apoio</span><svg class="i sm"><use href="#i-out"/></svg></button>
+    </div>
+    <div class="rail-foot">
+      <button data-act="sobre" title="Sobre os dados"><svg class="i"><use href="#i-info"/></svg><span class="lb">Sobre os dados</span></button>
+      <small>AURORA · MVP 02</small>
+    </div>
+  </aside>
+
+  <div class="main" id="main">
+    <header class="topbar">
+      <div class="top-brand"><svg style="color:var(--brand)"><use href="#mark"/></svg><b>aurora</b></div>
+      <div class="crumbs">Rio Claro <svg class="i sm"><use href="#i-chev"/></svg> <b id="crumb">Mapa colaborativo</b></div>
+      <div class="top-actions">
+        <span class="chip-lock"><svg class="i sm"><use href="#i-lock"/></svg><span>Sem identificação no relato</span></span>
+        <button class="quick-exit" data-act="sair" title="Sai do app na hora (atalho: Esc duas vezes)">Sair rápido <svg class="i sm"><use href="#i-out"/></svg></button>
+      </div>
+    </header>
+
+    <!-- ============ MAPA ============ -->
+    <section class="view" id="view-mapa" data-title="Mapa colaborativo">
+      <div class="hero">
+        <div>
+          <p class="eyebrow">Informação para o seu caminho</p>
+          <h1>Olhe ao redor. Vá com informação.</h1>
+          <p class="lede">Relatos de mulheres, a pesquisa feita na cidade e registros oficiais de Rio Claro no mesmo mapa.</p>
+        </div>
+        <button class="btn primary" data-act="relatar"><svg class="i"><use href="#i-chat"/></svg>Registrar um relato</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><span class="ic amb"><svg class="i"><use href="#i-users"/></svg></span><div><b class="num" id="stRel">0</b><span>relatos da comunidade</span><small>últimos 30 dias</small></div></div>
+        <div class="stat"><span class="ic lil"><svg class="i"><use href="#i-chat"/></svg></span><div><b class="num" id="stPesq">51</b><span>respostas à pesquisa</span><small id="stPesqQ">setembro 2026</small></div></div>
+        <div class="stat"><span class="ic rose"><svg class="i"><use href="#i-layers"/></svg></span><div><b class="num" id="stBO">683</b><span>registros de B.O.</span><small>jan 2025 – abr 2026</small></div></div>
+      </div>
+
+      <div class="card mapcard">
+        <div class="mapbar">
+          <div class="seg" role="tablist" aria-label="Camada do mapa" id="layerSeg">
+            <button role="tab" data-layer="relatos"><span class="dot" style="background:var(--amb-3)"></span>Relatos <span class="cnt num" id="cntRel">0</span></button>
+            <button role="tab" data-layer="percepcao"><span class="dot" style="background:var(--lil-3)"></span>Percepção</button>
+            <button role="tab" data-layer="historico"><span class="dot" style="background:var(--rose-3)"></span><span class="long">Histórico</span>B.O.</button>
+          </div>
+          <button class="icon-btn" data-act="sobre" data-tab="camadas" aria-label="O que cada camada mostra"><svg class="i"><use href="#i-info"/></svg></button>
+        </div>
+        <div class="filters">
+          <div class="chips" id="periodChips" role="group" aria-label="Horário"></div>
+          <select class="select" id="typeSel" aria-label="Tipo"></select>
+          <span class="range" id="rangeLbl"></span>
+        </div>
+        <div class="mapwrap" id="mapwrap">
+          <div id="map" role="application" aria-label="Mapa de Rio Claro dividido em células de cerca de 1 km"></div>
+          <div class="map-chip"><svg class="i sm"><use href="#i-pin"/></svg>RIO CLARO <small>SP</small></div>
+          <div class="map-tools">
+            <button class="tool" id="btnLocate" hidden title="Mostrar onde estou"><svg class="i"><use href="#i-locate"/></svg></button>
+            <button class="tool" id="btnRoute"><svg class="i"><use href="#i-route"/></svg><span>Checar trajeto</span></button>
+          </div>
+          <div class="zoom"><button id="zin" aria-label="Aproximar">+</button><button id="zout" aria-label="Afastar">−</button></div>
+          <div class="legend" id="legend"></div>
+          <div class="pickbar" id="pickbar" hidden><span>Toque no mapa na área onde aconteceu</span><button id="pickCancel">Cancelar</button></div>
+          <div class="routebar" id="routebar" hidden><span id="routeMsg">Toque no ponto de partida</span><button id="routeClose">Fechar</button></div>
+          <div class="empty-hint" id="emptyHint" hidden></div>
+          <div class="panel" id="panel" hidden></div>
+        </div>
+        <p class="mapnote" id="mapNote"><svg class="i sm"><use href="#i-info"/></svg><span></span></p>
+        <div class="areas">
+          <div class="areas-head">
+            <h2 id="areasTitle">Explore as áreas</h2>
+            <label class="search"><svg class="i sm"><use href="#i-search"/></svg><input id="areaSearch" type="search" placeholder="Buscar na lista" aria-label="Buscar área"></label>
+          </div>
+          <ol class="arealist" id="areaList"></ol>
+          <button class="more" id="areaMore" hidden>Mostrar mais áreas</button>
+        </div>
+      </div>
+      <div class="foot">
+        <span><svg class="i sm"><use href="#i-shield"/></svg>Informação com cuidado. Nenhum mapa garante segurança.</span>
+        <button class="linkbtn" data-act="sobre" data-tab="fontes">Fontes e metodologia <svg class="i sm"><use href="#i-out"/></svg></button>
+      </div>
+    </section>
+
+    <!-- ============ DADOS ============ -->
+    <section class="view" id="view-dados" data-title="Dados e pesquisa" hidden></section>
+
+    <!-- ============ ALERTAS ============ -->
+    <section class="view" id="view-alertas" data-title="Meus alertas" hidden></section>
+
+    <!-- ============ APOIO ============ -->
+    <section class="view" id="view-apoio" data-title="Apoio" hidden>
+      <div class="page-head">
+        <p class="eyebrow">Você não está sozinha</p>
+        <h1>Onde buscar ajuda em Rio Claro</h1>
+        <p>Se você está em perigo agora, ligue 190. O relato na Aurora avisa outras mulheres, mas não substitui um boletim de ocorrência.</p>
+        <div style="margin-top:14px"><button class="btn primary sm" type="button" data-act="apoioMapa"><svg class="i sm"><use href="#i-map"/></svg>Ver a rede de apoio no mapa</button></div>
+      </div>
+      <div class="sec">
+        <h2>Emergência e orientação</h2>
+        <div class="grid2" style="margin-top:12px">
+          <div class="card help-num"><strong class="num">190</strong><div><h3>Polícia Militar</h3><p>Perigo agora ou crime acontecendo. 24 horas.</p></div><button class="btn sm" data-copy="190"><svg class="i sm"><use href="#i-copy"/></svg>Copiar</button></div>
+          <div class="card help-num"><strong class="num">180</strong><div><h3>Central de Atendimento à Mulher</h3><p>Orientação e denúncia, 24 horas, ligação gratuita. WhatsApp (61) 9610-0180.</p></div><button class="btn sm" data-copy="180"><svg class="i sm"><use href="#i-copy"/></svg>Copiar</button></div>
+          <div class="card help-num"><strong class="num">153</strong><div><h3>Guarda Civil Municipal</h3><p>Guarda de Rio Claro, que mantém a Patrulha Maria da Penha.</p></div><button class="btn sm" data-copy="153"><svg class="i sm"><use href="#i-copy"/></svg>Copiar</button></div>
+          <div class="card help-num"><strong class="num">192</strong><div><h3>SAMU</h3><p>Atendimento médico de urgência.</p></div><button class="btn sm" data-copy="192"><svg class="i sm"><use href="#i-copy"/></svg>Copiar</button></div>
+        </div>
+      </div>
+      <div id="apoioDir"></div>
+      <div class="sec">
+        <h2>Se precisar agir rápido</h2>
+        <div class="grid2" style="margin-top:12px">
+          <div class="card place-card">
+            <p class="eyebrow">Na rua</p>
+            <h3>Em uma situação de risco</h3>
+            <p>Procure um lugar movimentado e iluminado, como comércio aberto ou ponto de ônibus com gente. Avise alguém de confiança e compartilhe sua localização pelo celular.</p>
+          </div>
+          <div class="card place-card">
+            <p class="eyebrow">Depois de uma violência sexual</p>
+            <h3>Procure a saúde em até 72 horas</h3>
+            <p>Há remédios que evitam HIV, outras infecções e gravidez. O atendimento de saúde não depende de boletim de ocorrência. Em Rio Claro, o pronto-socorro ginecológico fica na Av. 15, esquina com a Rua 2, e funciona 24 horas.</p>
+          </div>
+        </div>
+      </div>
+      <p class="foot"><span><svg class="i sm"><use href="#i-info"/></svg>Endereços, telefones e horários reunidos em 24 de setembro de 2026 em páginas oficiais da Prefeitura, do TJSP, da Defensoria e da Fundação Municipal de Saúde. A equipe deve confirmar com cada serviço antes do lançamento.</span></p>
+    </section>
+
+    <!-- ============ MODERAÇÃO ============ -->
+    <section class="view" id="view-moderacao" data-title="Moderação" hidden></section>
+  </div>
+
+  <!-- ============ CHAT ============ -->
+  <aside class="chat" id="chat" aria-label="Converse com a Aurora">
+    <div class="chat-head">
+      <span class="av"><svg class="i lg"><use href="#i-spark"/></svg></span>
+      <div><b>Converse com a Aurora</b><small>Assistente de relato guiado</small></div>
+      <button class="icon-btn chat-close" data-act="fecharChat" aria-label="Fechar conversa"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="chat-privacy"><svg class="i sm"><use href="#i-lock"/></svg>Sem nome, telefone ou endereço exato</div>
+    <div class="chat-log" id="chatLog" aria-live="polite"></div>
+    <div class="chat-quick" id="chatQuick"></div>
+    <form class="chat-input" id="chatForm" autocomplete="off">
+      <label class="sr" for="chatText">Mensagem para a Aurora</label>
+      <textarea id="chatText" rows="1" placeholder="Ou conte com suas palavras…"></textarea>
+      <button class="send" type="submit" aria-label="Enviar"><svg class="i"><use href="#i-send"/></svg></button>
+    </form>
+    <div class="chat-foot">
+      <button data-act="recomecar"><svg class="i sm"><use href="#i-undo"/></svg>Recomeçar</button>
+      <span class="ai-dot" id="aiState">Texto livre: modo simples</span>
+      <button data-act="sobre" data-tab="privacidade">Como cuidamos dos dados</button>
+    </div>
+  </aside>
+</div>
+
+<nav class="tabbar" id="tabbar" aria-label="Navegação">
+  <button data-view="mapa" class="on"><svg class="i"><use href="#i-map"/></svg>Mapa</button>
+  <button data-view="alertas"><svg class="i"><use href="#i-bell"/></svg>Alertas<span class="badge num" data-badge hidden></span></button>
+  <button data-act="relatar" class="tb-main"><span class="bub"><svg class="i"><use href="#i-plus"/></svg></span><span>Relatar</span></button>
+  <button data-view="dados"><svg class="i"><use href="#i-chart"/></svg>Dados</button>
+  <button data-view="apoio"><svg class="i"><use href="#i-heart"/></svg>Apoio</button>
+</nav>
+
+<div class="modal" id="sobre" hidden role="dialog" aria-modal="true" aria-labelledby="sobreT">
+  <div class="box" tabindex="-1">
+    <header><h2 id="sobreT">Sobre os dados</h2><button class="icon-btn" data-act="fecharSobre" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="tabs" id="sobreTabs">
+      <button data-tab="camadas" class="on">Camadas do mapa</button>
+      <button data-tab="privacidade">Privacidade</button>
+      <button data-tab="fontes">Fontes e método</button>
+    </div>
+    <div class="content" id="sobreContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<div class="cover" id="cover" hidden>
+  <div>
+    <h1>Lista de compras</h1>
+    <ul><li>Arroz e feijão</li><li>Café</li><li>Pão de forma</li><li>Frutas da semana</li><li>Detergente</li><li>Papel toalha</li></ul>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>if(!window.L){document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')}</script>
+<script type="module" src="main.js"></script>
+</body>
+</html>
