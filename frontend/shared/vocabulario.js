@@ -1,15 +1,15 @@
 /* vocabulário: tipos de situação, faixas de horário e quando aconteceu */
 export const TIPOS = [
-  { id: 'assedio', label: 'Assédio verbal', kw: /assedi|cantada|mexeu comigo|falou (coisa|besteira|gracinha)|gracinha|obscen|buzin/ },
-  { id: 'perseguicao', label: 'Perseguição', long: 'Perseguição / me seguiram', kw: /segui(u|ram|ndo|da)|persegu|atras de mim|me acompanh/ },
-  { id: 'abordagem', label: 'Abordagem indesejada', kw: /abord|chegou em mim|puxou conversa|tentou (falar|conversar|pegar)|insist/ },
-  { id: 'intimidacao', label: 'Intimidação', long: 'Encarar ou intimidar', kw: /encar|olhando|observ|intimid|me medindo/ },
-  { id: 'exposicao', label: 'Exposição sexual', kw: /exposi|mostrou (as partes|o penis|o orgao)|se masturb|nudez|pelado/ },
-  { id: 'roubo', label: 'Roubo ou furto', kw: /roub|furt|assalt|levaram|puxaram (meu|minha)/ },
-  { id: 'violencia', label: 'Violência física', kw: /agred|bateu|empurr|soco|tapa|violencia fisica|me pegou|agarr/ },
-  { id: 'veiculo', label: 'Situação com veículo', kw: /\bcarro\b|\bmoto\b|veiculo|\buber\b|\b99\b|motorista|\bvan\b|caminhao/ },
-  { id: 'ambiente', label: 'Rua escura ou deserta', kw: /escur|desert|sem luz|iluminac|apagad|vazi[ao]/ },
-  { id: 'outra', label: 'Outra situação', kw: null }
+  { id: 'assedio', cor: '#B07AA1', label: 'Assédio verbal', kw: /assedi|cantada|mexeu comigo|falou (coisa|besteira|gracinha)|gracinha|obscen|buzin/ },
+  { id: 'perseguicao', cor: '#4E79A7', label: 'Perseguição', long: 'Perseguição / me seguiram', kw: /segui(u|ram|ndo|da)|persegu|atras de mim|me acompanh/ },
+  { id: 'abordagem', cor: '#76B7B2', label: 'Abordagem indesejada', kw: /abord|chegou em mim|puxou conversa|tentou (falar|conversar|pegar)|insist/ },
+  { id: 'intimidacao', cor: '#EDC948', label: 'Intimidação', long: 'Encarar ou intimidar', kw: /encar|olhando|observ|intimid|me medindo/ },
+  { id: 'exposicao', cor: '#FF9DA7', label: 'Exposição sexual', kw: /exposi|mostrou (as partes|o penis|o orgao)|se masturb|nudez|pelado/ },
+  { id: 'roubo', cor: '#F28E2B', label: 'Roubo ou furto', kw: /roub|furt|assalt|levaram|puxaram (meu|minha)/ },
+  { id: 'violencia', cor: '#E15759', label: 'Violência física', kw: /agred|bateu|empurr|soco|tapa|violencia fisica|me pegou|agarr/ },
+  { id: 'veiculo', cor: '#9C755F', label: 'Situação com veículo', kw: /\bcarro\b|\bmoto\b|veiculo|\buber\b|\b99\b|motorista|\bvan\b|caminhao/ },
+  { id: 'ambiente', cor: '#59A14F', label: 'Rua escura ou deserta', kw: /escur|desert|sem luz|iluminac|apagad|vazi[ao]/ },
+  { id: 'outra', cor: '#BAB0AC', label: 'Outra situação', kw: null }
 ];
 export const TIPO = Object.fromEntries(TIPOS.map(t => [t.id, t]));
 export const PERIODOS = [

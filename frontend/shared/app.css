@@ -187,6 +187,10 @@ p{margin:0}
 .legend .ramp{display:flex;gap:3px;align-items:flex-end}
 .legend .ramp span{display:grid;gap:3px;justify-items:center;font-size:11px;color:var(--ink-3)}
 .legend .ramp i{display:block;width:30px;height:12px;border-radius:3px}
+.legend .tipos-leg{flex-wrap:wrap;gap:4px 10px;max-width:260px}
+.legend .tipos-leg span{display:flex;align-items:center;gap:5px}
+.legend .tipos-leg i,.legend .ramp.tipos-leg i{width:11px;height:11px;border-radius:50%}
+.legend small{display:block;margin-top:5px;font-size:11px;color:var(--ink-3)}
 .legend .pinkey{display:flex;align-items:center;gap:6px}
 .pickbar,.routebar{position:absolute;left:50%;transform:translateX(-50%);top:64px;z-index:560;background:var(--ink);color:var(--surface);border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-pop);font-weight:700;font-size:14.5px;max-width:calc(100% - 28px)}
 .pickbar button,.routebar button{border:0;border-radius:8px;background:rgba(255,255,255,.14);color:inherit;padding:7px 10px;font-weight:700;font-size:13.5px}

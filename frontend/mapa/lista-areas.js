@@ -6,7 +6,7 @@ import { cellCenter } from '../shared/grade.js';
 import { areaName, cellSearchText } from '../shared/bairros.js';
 import { S } from '../shared/estado.js';
 import { showView } from '../shared/navegacao.js';
-import { layerValues, SCALES, classOf } from './camadas.js';
+import { layerValues, SCALES, classOf, tipoPorCelula } from './camadas.js';
 import { map } from './mapa.js';
 import { openPanel } from './painel-area.js';
 import { filteredReports } from '../relatos/relatos.js';
@@ -34,13 +34,13 @@ export function renderAreaList() {
   let items = [...layerValues().entries()].map(([id, v]) => ({ id, v }));
   if (q) items = items.filter(it => cellSearchText(it.id).includes(q));
   items.sort((a, b) => b.v - a.v || areaName(a.id).localeCompare(areaName(b.id)));
-  const lim = S.showAll || q ? items.length : 6;
+  const lim = S.showAll || q ? items.length : 6, tipos = S.layer === 'relatos' ? tipoPorCelula() : null;
   ol.replaceChildren();
   if (!items.length) ol.append(h('li', { class: 'none' }, q ? 'Nenhuma área encontrada com esse nome.' : 'Nenhuma área com dados para esse filtro.'));
   for (const it of items.slice(0, lim)) {
     const k = classOf(it.v, sc.breaks);
     ol.append(h('li', null, h('button', { type: 'button', onclick: () => focusCell(it.id) },
-      h('span', { class: 'sw', style: 'background:var(' + sc.vars[Math.max(0, k)] + ')' }),
+      h('span', { class: 'sw', style: 'background:' + (tipos ? TIPO[tipos.get(it.id)].cor : 'var(' + sc.vars[Math.max(0, k)] + ')') }),
       h('span', null, h('span', { class: 'an', text: areaName(it.id) }), h('span', { class: 'as', text: areaSub(it.id, it.v) })),
       h('span', { class: 'av num', text: fmtN(it.v) }), icon('chev'))));
   }
