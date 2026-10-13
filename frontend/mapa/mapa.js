@@ -8,7 +8,8 @@ import { cellOf, cellCenter, cellPoly } from '../shared/grade.js';
 import { BYNAME, areaName } from '../shared/bairros.js';
 import { S, periodOk } from '../shared/estado.js';
 import { showView } from '../shared/navegacao.js';
-import { layerValues, SCALES, classOf } from './camadas.js';
+import { layerValues, SCALES, classOf, tipoPorCelula } from './camadas.js';
+import { TIPO, TIPOS as TIPOS_ORD } from '../shared/vocabulario.js';
 import { closePanel, openPanel } from './painel-area.js';
 import { renderAreaList } from './lista-areas.js';
 import { startRoute, routeClick, clearRoute } from './trajeto.js';
@@ -200,9 +201,13 @@ export function styleHexes(vals) {
   const sc = SCALES[S.layer], ramp = sc.vars.map(cssVar), z = map.getZoom();
   const op = (isDark() ? 0.62 : 0.5) * Math.max(0.42, Math.min(1, 1 - (z - 13) * 0.2)), w = z >= 15 ? 1.8 : 1.2;
   for (const id of vals.keys()) ensureHex(id);
+  const tipos = S.layer === 'relatos' ? tipoPorCelula() : null;
   for (const [id, poly] of hexes) {
     const v = vals.get(id) || 0, k = v ? classOf(v, sc.breaks) : -1;
-    poly.setStyle(k < 0 ? baseStyle() : { stroke: true, color: ramp[3], weight: w, opacity: 0.9, fill: true, fillColor: ramp[k], fillOpacity: op });
+    if (k < 0) { poly.setStyle(baseStyle()); continue; }
+    const cor = tipos ? TIPO[tipos.get(id)].cor : null;
+    poly.setStyle(cor ? { stroke: true, color: cor, weight: w, opacity: 0.95, fill: true, fillColor: cor, fillOpacity: Math.min(0.85, op * (0.7 + 0.25 * k)) }
+      : { stroke: true, color: ramp[3], weight: w, opacity: 0.9, fill: true, fillColor: ramp[k], fillOpacity: op });
   }
 }
 export function renderPins() {
@@ -248,7 +253,10 @@ export function renderSelection() {
 export function renderLegend() {
   const sc = SCALES[S.layer], el = $('#legend');
   const anyRecent = recentReports().some(periodOk);
-  el.innerHTML = '<b>' + sc.title + '</b><div class="ramp">' + sc.vars.map((v, i) => '<span><i style="background:var(' + v + ')"></i>' + sc.labels[i] + '</span>').join('') + '</div>' +
+  const presentes = S.layer === 'relatos' ? new Set(tipoPorCelula().values()) : null;
+  const chave = presentes ? (presentes.size ? '<div class="ramp tipos-leg">' + TIPOS_ORD.filter(t => presentes.has(t.id)).map(t => '<span><i style="background:' + t.cor + '"></i>' + esc(t.label) + '</span>').join('') + '</div><small>Cor: tipo mais relatado na área. Mais forte: mais relatos.</small>' : '')
+    : '<div class="ramp">' + sc.vars.map((v, i) => '<span><i style="background:var(' + v + ')"></i>' + sc.labels[i] + '</span>').join('') + '</div>';
+  el.innerHTML = '<b>' + sc.title + '</b>' + chave +
     (S.layer !== 'relatos' && anyRecent ? '<div class="pinkey"><span class="pin faint" style="position:static;transform:none"></span>relatos recentes</div>' : '') +
     (APOIO.length ? '<button type="button" class="apkey' + (S.apoio ? ' on' : '') + '" aria-pressed="' + S.apoio + '" title="' + (S.apoio ? 'Esconder' : 'Mostrar') + ' delegacia, Guarda, assistência social, Justiça e saúde 24h">' +
       '<span class="sw">' + (S.apoio ? '<svg class="i" aria-hidden="true"><use href="#i-check"/></svg>' : '') + '</span>Onde pedir ajuda<span class="ics">' +
