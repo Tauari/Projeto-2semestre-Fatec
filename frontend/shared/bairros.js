@@ -1,7 +1,7 @@
 /* bairros e nomes de áreas */
 import { D } from './dados.js';
 import { norm, escRe } from './formato.js';
-import { cellCenter, distM } from './grade.js';
+import { cellCenter, distM, grossa } from './grade.js';
 
 export let BAIRROS = [], BYNAME = {};
 export function configurarBairros() {
@@ -12,7 +12,7 @@ export const nameCache = new Map();
 export function areaName(id) {
   if (nameCache.has(id)) return nameCache.get(id);
   let nm;
-  const bo = D.bo.cells[id];
+  const bo = D.bo.cells[grossa(id)];
   if (bo && bo.b.length) nm = bo.b[0][0] + ' e arredores';
   else {
     const c = cellCenter(id); let best = null, bd = Infinity;
@@ -23,8 +23,8 @@ export function areaName(id) {
 }
 export function cellSearchText(id) {
   const parts = [areaName(id)];
-  const bo = D.bo.cells[id]; if (bo) parts.push(...bo.b.map(x => x[0]));
-  const pc = D.pesq.cells[id]; if (pc) parts.push(...pc.a.map(x => x[0]));
+  const bo = D.bo.cells[grossa(id)]; if (bo) parts.push(...bo.b.map(x => x[0]));
+  const pc = D.pesq.cells[grossa(id)]; if (pc) parts.push(...pc.a.map(x => x[0]));
   return norm(parts.join(' '));
 }
 export function searchBairros(q) {

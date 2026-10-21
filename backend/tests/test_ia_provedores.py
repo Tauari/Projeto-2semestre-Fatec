@@ -145,4 +145,4 @@ def test_registro_le_a_configuracao(monkeypatch):
         obter_provedor()
     registrar_provedor('falso', Falso)
     assert obter_provedor().nome == 'falso'
-    assert provedores_disponiveis() == ['heuristica', 'falso']
+    assert provedores_disponiveis() == ['heuristica', 'ollama', 'falso']

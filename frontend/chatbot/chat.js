@@ -8,13 +8,16 @@ import { areaName, searchBairros, findBairroInText } from '../shared/bairros.js'
 import { S } from '../shared/estado.js';
 import { Store } from '../shared/store.js';
 import { showView } from '../shared/navegacao.js';
-import { renderSelection, setLayer } from '../mapa/mapa.js';
+import { map, renderSelection, setLayer } from '../mapa/mapa.js';
 import { focusCell } from '../mapa/lista-areas.js';
 import { startPick } from '../mapa/selecao.js';
 import { reportItem } from '../relatos/item-relato.js';
 import { toggleFollow } from '../relatos/alertas.js';
 import { showApoioOnMap } from '../apoio/camada-apoio.js';
 import { heuristic, infoProvedorIA, extrairNoServidor } from './extracao.js';
+import { pedeRota, entenderRota, geocodificar } from './rota-conversa.js';
+import { startRoute, routeClick } from '../mapa/trajeto.js';
+import { MODOS } from '../mapa/roteador.js';
 
 /* ------------------------------------------------------------------ chat da Aurora */
 export const Chat = {
@@ -50,16 +53,15 @@ export const Chat = {
     this.log.replaceChildren(); this.clearQuick();
     this.bot([h('span', null, 'Oi! Eu sou a Aurora. Te ajudo a registrar uma situação em Rio Claro para alertar outras mulheres. Você escolhe o que compartilhar.'),
       h('span', { class: 'note', text: 'Este relato não é um boletim de ocorrência. Em emergência, ligue 190.' })]);
+    this.menuInicial();
+  },
+  menuInicial() {
     this.options([
       { label: 'Registrar uma situação', primary: true, go: () => { this.me('Quero registrar uma situação'); this.askTipo(); } },
+      { label: 'Traçar uma rota', go: () => this.formRota() },
       { label: 'Estou em perigo agora', go: () => { this.me('Estou em perigo agora'); this.emergency(false); } },
       { label: 'Onde buscar apoio', go: () => { this.me('Onde buscar apoio?'); this.support(); } }
     ]);
-  },
-  startWithCell(id) {
-    this.draft = this.newDraft(); this.draft.cell = id; this.step = 'tipo';
-    this.bot('Vamos registrar um relato em ' + areaName(id) + '.');
-    this.askTipo();
   },
   next() {
     const d = this.draft;
@@ -97,7 +99,7 @@ export const Chat = {
         this.bairroSearch());
       return;
     }
-    this.bot([h('span', null, 'Onde foi? Marque no mapa ou busque o bairro.'), h('span', { class: 'note', text: 'Eu guardo só a região, uma célula de cerca de 1 km. Nunca o endereço.' })]);
+    this.bot([h('span', null, 'Onde foi? Marque no mapa ou busque o bairro.'), h('span', { class: 'note', text: 'Eu guardo só a região, uma área de cerca de 150 m. Nunca o endereço.' })]);
     this.quick.append(h('button', { type: 'button', class: 'qr primary', onclick: () => this.pickOnMap() }, 'Marcar no mapa'), this.bairroSearch());
   },
   bairroSearch() {
@@ -107,7 +109,7 @@ export const Chat = {
     inp.addEventListener('input', () => {
       ul.replaceChildren(); const q = inp.value.trim(); if (q.length < 2) return;
       const res = searchBairros(q).slice(0, 6);
-      for (const b of res) ul.append(h('li', null, h('button', { type: 'button', onclick: () => { this.draft.sug = null; this.setCell(cellOf(b.lat, b.lng), b.nome); } }, b.nome)));
+      for (const b of res) ul.append(h('li', null, h('button', { type: 'button', onclick: () => { this.draft.sug = null; this.setCell(cellOf(b.lat, b.lng, true), b.nome); } }, b.nome)));
       if (!res.length) ul.append(h('li', { class: 'muted', style: 'font-size:14px;padding:6px 2px' }, 'Não achei esse bairro. Tente marcar no mapa.'));
     });
     wrap.append(inp, ul); return wrap;
@@ -158,14 +160,62 @@ export const Chat = {
     if (!text || this.busy) return;
     ta.value = ''; ta.style.height = 'auto';
     this.me(text);
+    /* pedido de rota no meio de um relato: larga o relato (e as sugestões dele) e volta ao início */
+    if (pedeRota(text)) { this.draft = this.newDraft(); this.step = 'inicio'; return this.pedirRota(text); }
     if (this.step === 'fim' || this.step === 'inicio') this.draft = this.newDraft();
     if (this.step === 'onde') {
       const b = findBairroInText(text);
-      if (b) { this.draft.sug = { cell: cellOf(b.lat, b.lng), nome: b.nome }; return this.askOnde(); }
+      if (b) { this.draft.sug = { cell: cellOf(b.lat, b.lng, true), nome: b.nome }; return this.askOnde(); }
     }
     if (this.step === 'detalhes') return this.processDetails(text);
     if (this.step === 'revisao') { this.draft.texto = ''; this.draft.removidos = []; this.bot('Vou usar o que você escreveu como nova descrição.'); return this.processDetails(text); }
     return this.understand(text);
+  },
+  /* "uma rota da Rua X até a Rua Y": procura os dois lugares no mapa e abre o trajeto */
+  async pedirRota(text) {
+    this.busy = true; this.menuInicial(); // troca as sugestões do relato pelo menu inicial
+    const typing = this.bot('Entendendo o trajeto…', 'typing');
+    const p = await entenderRota(text, this.aiOn);
+    typing.remove(); this.busy = false;
+    this.abrirRota(p);
+  },
+  /* acha os dois lugares no mapa e abre o trajeto; false se não achou algum */
+  abrirRota(p) {
+    const a = p.origem && geocodificar(p.origem), b = p.destino && geocodificar(p.destino);
+    if (!a || !b) {
+      const quais = [!a && (p.origem || 'o ponto de partida'), !b && (p.destino || 'o destino')].filter(Boolean).join(' e ');
+      this.bot('Não consegui achar ' + quais + ' no mapa. Tente o nome da rua ou do bairro, como "Rua 7" ou "Bela Vista".');
+      return false;
+    }
+    const modo = Object.hasOwn(MODOS, p.modo) ? p.modo : 'pe';
+    this.bot('Certo: de ' + cap(a.nome) + ' até ' + cap(b.nome) + ' (' + MODOS[modo].nome.toLowerCase() + '). Mostrando no mapa. O ponto é o meio da rua, não um número exato.');
+    showView('mapa'); closeChat(); map.invalidateSize();
+    startRoute(); S.route.modo = modo;
+    routeClick(L.latLng(a.lat, a.lng)); routeClick(L.latLng(b.lat, b.lng));
+    return true;
+  },
+  /* "Traçar uma rota": partida e destino em dois campos, como num app de mapas */
+  formRota() {
+    this.me('Quero traçar uma rota');
+    this.bot('Escreva de onde você sai e para onde vai: rua, avenida ou bairro, com ou sem número. Nada disso é guardado.');
+    let modo = 'pe';
+    const campo = (rot, ph) => h('div', { class: 'bsearch' }, h('input', { type: 'text', placeholder: ph, 'aria-label': rot, autocomplete: 'off' }));
+    const ca = campo('Ponto de partida', 'Partida (ex.: Rua 7, Centro)'), cb = campo('Destino', 'Destino (ex.: Avenida 29, Bela Vista)');
+    const ia = ca.firstChild, ib = cb.firstChild;
+    const botoes = Object.entries(MODOS).map(([k, m]) => h('button', { type: 'button', class: 'qr' + (k === modo ? ' on' : ''), 'aria-pressed': k === modo ? 'true' : 'false', 'data-modo': k,
+      onclick: () => { modo = k; for (const bt of botoes) { const on = bt.dataset.modo === k; bt.classList.toggle('on', on); bt.setAttribute('aria-pressed', on ? 'true' : 'false'); } } }, m.nome));
+    const go = () => {
+      const o = ia.value.trim(), d = ib.value.trim();
+      if (!o || !d) { this.bot('Preencha a partida e o destino.'); return; }
+      this.me('De ' + o + ' até ' + d);
+      if (this.abrirRota({ origem: o, destino: d, modo })) this.menuInicial();
+    };
+    for (const i of [ia, ib]) i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    this.clearQuick();
+    this.quick.append(ca, cb, h('div', { style: 'display:flex;gap:7px' }, ...botoes),
+      h('button', { type: 'button', class: 'qr primary', onclick: go }, 'Traçar rota'),
+      h('button', { type: 'button', class: 'qr quiet', onclick: () => this.menuInicial() }, 'Voltar'));
+    if (!isMobile()) ia.focus();
   },
   async understand(text) {
     this.busy = true;
@@ -183,7 +233,7 @@ export const Chat = {
     if (res.periodo && !d.periodo) { d.periodo = res.periodo; d.periodoAsked = true; got.push(PER[res.periodo].long); }
     if (res.descricao && !d.texto) { const sc = scrub(res.descricao); d.texto = sc.text.slice(0, CONFIG.textoMax); d.removidos = [...new Set([...(res.removidos || []), ...sc.removed])]; }
     if (res.fromAI) d.origem = 'chat-ia';
-    if (res.bairro && !d.cell) { d.sug = { cell: cellOf(res.bairro.lat, res.bairro.lng), nome: res.bairro.nome }; got.push('perto de ' + res.bairro.nome); }
+    if (res.bairro && !d.cell) { d.sug = { cell: cellOf(res.bairro.lat, res.bairro.lng, true), nome: res.bairro.nome }; got.push('perto de ' + res.bairro.nome); }
     if (res.resposta) this.bot(res.resposta);
     if (got.length) this.bot('Anotei: ' + got.join(' · ') + '. Agora faltam alguns detalhes.');
     else if (!res.resposta) this.bot('Obrigada por contar. Vou te fazer perguntas rápidas para organizar o relato.');
@@ -284,7 +334,7 @@ export const Chat = {
 export function relatar() {
   showView('mapa');
   openChat();
-  if (Chat.step === 'inicio' || Chat.step === 'fim') { if (Chat.step === 'fim') Chat.start(); Chat.me('Quero registrar uma situação'); Chat.askTipo(); }
+  if (Chat.step === 'fim') Chat.start(); // abre no menu inicial; o relato só começa quando a pessoa escolhe "Registrar uma situação"
 }
 export function openChat() {
   const c = $('#chat'); c.classList.remove('picking');

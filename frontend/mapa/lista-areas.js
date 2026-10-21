@@ -2,7 +2,7 @@ import { $, h, icon, isMobile } from '../shared/dom.js';
 import { norm, fmtN, plural, ago } from '../shared/formato.js';
 import { TIPO, PER } from '../shared/vocabulario.js';
 import { D } from '../shared/dados.js';
-import { cellCenter } from '../shared/grade.js';
+import { cellCenter, dentro } from '../shared/grade.js';
 import { areaName, cellSearchText } from '../shared/bairros.js';
 import { S } from '../shared/estado.js';
 import { showView } from '../shared/navegacao.js';
@@ -14,7 +14,7 @@ import { filteredReports } from '../relatos/relatos.js';
 /* lista de áreas */
 export function areaSub(id, v) {
   if (S.layer === 'relatos') {
-    const reps = filteredReports().filter(r => r.cell === id);
+    const reps = filteredReports().filter(r => dentro(r.cell, id));
     const cnt = {}; for (const r of reps) for (const t of r.tipos) cnt[t] = (cnt[t] || 0) + 1;
     const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
     return (top ? TIPO[top[0]].label : 'Relatos') + ' · mais recente ' + ago(reps[0].criado);

@@ -91,3 +91,30 @@ def test_extrair_meio_emoji_no_corte(cliente):
     r = cliente.post(API + '/ia/extrair', json={'texto': 'x' * 299 + '😀 fim'})
     assert r.status_code == 200
     assert r.json()['resultado']['descricao'] == 'x' * 299 + '�'
+
+
+# ------------------------------------------------------------------ POST /ia/rota
+
+def test_rota_sem_modelo_responde_501(cliente):
+    r = cliente.post(API + '/ia/rota', json={'texto': 'rota da rua 7 até a rua 3'})
+    assert r.status_code == 501
+
+
+def test_rota_com_ollama(criar_cliente, monkeypatch):
+    import httpx
+    resposta = {'origem': 'Rua 7', 'destino': 'Avenida 29', 'modo': 'bike'}
+    monkeypatch.setattr(httpx, 'post', lambda *a, **k: httpx.Response(
+        200, json={'response': json.dumps(resposta)}, request=httpx.Request('POST', 'http://x')))
+    c = criar_cliente(ia_provedor='ollama')
+    r = c.post(API + '/ia/rota', json={'texto': 'rota da rua 7 até a avenida 29 de bicicleta'})
+    assert r.status_code == 200 and r.json() == {'provedor': 'ollama', **resposta}
+
+
+def test_rota_com_ollama_desligado_devolve_vazio(criar_cliente, monkeypatch):
+    import httpx
+
+    def quebra(*a, **k):
+        raise httpx.ConnectError('desligado')
+    monkeypatch.setattr(httpx, 'post', quebra)
+    r = criar_cliente(ia_provedor='ollama').post(API + '/ia/rota', json={'texto': 'rota da rua 7 até a rua 3'})
+    assert r.json() == {'provedor': 'ollama', 'origem': None, 'destino': None, 'modo': None}

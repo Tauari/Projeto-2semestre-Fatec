@@ -75,7 +75,11 @@ def test_tipos_max_da_configuracao(criar_cliente):
     assert r.json()['relato']['tipos'] == ['assedio', 'roubo']
 
 
-@pytest.mark.parametrize('cell', ['abc', '', '1234_1', '1_1234', '0-0', '0_0\n', '\n0_0', ' 0_0', '0_0 ', '١_٢', '0_0_0',
+def test_celula_fina_de_200_m_e_aceita(cliente):
+    assert cliente.post(API + '/relatos', json=_corpo(cell='f-123_1234')).status_code == 201
+
+
+@pytest.mark.parametrize('cell', ['abc', '', '12345_1', '1_12345', 'ff1_1', 'f', '1f_1', '0-0', '0_0\n', '\n0_0', ' 0_0', '0_0 ', '١_٢', '0_0_0',
                                   5, None, ['0_0']])
 def test_celula_invalida_422(cliente, cell):
     r = cliente.post(API + '/relatos', json=_corpo(cell=cell))

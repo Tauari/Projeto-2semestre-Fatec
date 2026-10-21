@@ -1,3 +1,4 @@
+import { subirGaveta } from '../mapa/gaveta.js';
 import { $, h, icon, esc } from '../shared/dom.js';
 import { plural } from '../shared/formato.js';
 import { LS } from '../shared/armazenamento-local.js';
@@ -92,7 +93,7 @@ export function openApoio(id, { reveal = false } = {}) {
   if (S.route && S.route.cells) clearRoute(true);
   S.selected = null; renderSelection();
   S.apSel = id; renderApoio();
-  const P = $('#panel'); P.replaceChildren(); P.hidden = false; P.dataset.kind = 'apoio'; P.dataset.ap = id; delete P.dataset.cell;
+  const P = $('#panel'); P.replaceChildren(); P.hidden = false; subirGaveta(); P.dataset.kind = 'apoio'; P.dataset.ap = id; delete P.dataset.cell;
   P.append(h('header', { class: 'ap-head t-' + p.tipo },
     h('div', null, h('small', null, h('span', { class: 'ap-dot', html: apSvg(p.tipo, 'i sm') }), T.nome), h('h3', { text: p.nome }), p.sub ? h('p', { class: 'ap-subt', text: p.sub }) : null),
     h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Fechar', onclick: closePanel }, icon('x'))));
@@ -125,7 +126,7 @@ export function apRow(p, extra) {
 export function openNearMe(ll) {
   if (S.route && S.route.cells) clearRoute(true);
   S.selected = null; renderSelection(); if (S.apSel) { S.apSel = null; renderApoio(); }
-  const P = $('#panel'); P.replaceChildren(); P.hidden = false; P.dataset.kind = 'perto'; delete P.dataset.cell; delete P.dataset.ap;
+  const P = $('#panel'); P.replaceChildren(); P.hidden = false; subirGaveta(); P.dataset.kind = 'perto'; delete P.dataset.cell; delete P.dataset.ap;
   P.append(h('header', null,
     h('div', null, h('small', null, 'Onde pedir ajuda'), h('h3', null, 'Mais perto de você')),
     h('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Fechar', onclick: closePanel }, icon('x'))));
@@ -137,7 +138,7 @@ export function openNearMe(ll) {
 export function openApoioList(ids) {
   if (S.route && S.route.cells) clearRoute(true);
   S.selected = null; renderSelection(); S.apSel = null; renderApoio();
-  const P = $('#panel'); P.replaceChildren(); P.hidden = false; P.dataset.kind = 'apoio-lista'; delete P.dataset.cell; delete P.dataset.ap;
+  const P = $('#panel'); P.replaceChildren(); P.hidden = false; subirGaveta(); P.dataset.kind = 'apoio-lista'; delete P.dataset.cell; delete P.dataset.ap;
   const same = ids.every(id => APBY[id].lat === APBY[ids[0]].lat && APBY[id].lng === APBY[ids[0]].lng);
   P.append(h('header', null,
     h('div', null, h('small', null, 'Onde pedir ajuda'), h('h3', { text: plural(ids.length, 'serviço', 'serviços') + (same ? ' no mesmo prédio' : ' aqui perto') })),

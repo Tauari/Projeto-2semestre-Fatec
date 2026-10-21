@@ -130,7 +130,7 @@ export function placeLabels() {
   }
 }
 
-/* células de ~1 km com os dados, por cima das ruas */
+/* células (1 km nos dados, 150 m nos relatos) por cima das ruas */
 export const baseStyle = () => ({ stroke: false, fill: false, opacity: 0, fillOpacity: 0 });
 export function ensureHex(id) {
   if (hexes.has(id)) return hexes.get(id);
@@ -146,10 +146,8 @@ export function tipFor(id) {
 }
 export function initMap() {
   readColors();
-  map = L.map('map', { zoomControl: false, attributionControl: true, preferCanvas: true, minZoom: 11, maxZoom: 17.5, zoomSnap: 0.5,
+  map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true, minZoom: 11, maxZoom: 17.5, zoomSnap: 0.5,
     maxBounds: [[-22.62, -47.84], [-22.18, -47.38]], maxBoundsViscosity: 0.8 });
-  map.attributionControl.setPrefix(false);
-  map.attributionControl.addAttribution('Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · células de ~1 km');
   map.fitBounds([[-22.456, -47.622], [-22.364, -47.528]], { padding: [8, 8], animate: false });
   for (const [name, zi, pe] of [['base', 250, 'none'], ['cells', 420, ''], ['labels', 460, 'none'], ['apoio', 610, '']]) {
     const pane = map.createPane(name); pane.style.zIndex = zi; if (pe) pane.style.pointerEvents = pe;
@@ -182,7 +180,7 @@ export function initMap() {
   }
 }
 export function onMapClick(e) {
-  const id = cellOf(e.latlng.lat, e.latlng.lng);
+  const id = cellOf(e.latlng.lat, e.latlng.lng, S.layer === 'relatos' || !!S.pick);
   if (S.pick) { const cb = S.pick; stopPick(); cb(id); return; }
   if (S.routeMode) { routeClick(e.latlng); return; }
   openPanel(id);
@@ -225,7 +223,7 @@ export function renderPins() {
 /* quanto do mapa o painel cobre: à direita no computador, embaixo no celular */
 export function panelInset() {
   const P = $('#panel'); if (!P || P.hidden) return [0, 0];
-  const w = $('#mapwrap').getBoundingClientRect(), r = P.getBoundingClientRect();
+  const w = $('#mapwrap').getBoundingClientRect(), r = ($('#gaveta') || P).getBoundingClientRect();
   return r.width >= w.width - 40 ? [0, Math.max(0, w.bottom - r.top)] : [Math.max(0, w.right - r.left), 0];
 }
 export function flyToVisible(ll, z) {
@@ -247,7 +245,7 @@ export function withMap(fn) {
 export function renderSelection() {
   if (!selLayer) return;
   selLayer.clearLayers();
-  if (S.route && S.route.cells) for (const id of S.route.cells) L.polygon(cellPoly(id), { renderer, interactive: false, color: C.ink, weight: 1.6, dashArray: '3 4', fill: false }).addTo(selLayer);
+  if (S.route && S.route.cells) for (const id of S.route.cells) L.polygon(cellPoly(id), { renderer, interactive: false, color: C.brand, weight: 1.2, opacity: 0.6, fill: false }).addTo(selLayer);
   if (S.selected) L.polygon(cellPoly(S.selected), { renderer, interactive: false, color: C.ink, weight: 3, fill: false }).addTo(selLayer);
 }
 export function renderLegend() {

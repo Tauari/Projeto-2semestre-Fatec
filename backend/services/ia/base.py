@@ -30,6 +30,7 @@ class ResultadoExtracao:
     descricao: str
     removidos: list[str]
     resposta: str
+    por_modelo: bool = False  # True só quando um modelo respondeu (e não a heurística de reserva)
 
 
 @dataclass
@@ -58,6 +59,10 @@ class ProvedorIA(ABC):
     def classificar(self, texto: str, contexto: ContextoIA) -> ResultadoClassificacao:
         r = self.extrair(texto, contexto)
         return ResultadoClassificacao(tipos=list(r.tipos), urgente=r.urgente, quando=r.quando, periodo=r.periodo)
+
+    def extrair_rota(self, texto: str) -> dict:
+        """{'origem': str | None, 'destino': str | None, 'modo': 'pe' | 'bike' | 'carro' | None}."""
+        raise CapacidadeNaoImplementada('Este provedor não entende pedidos de rota.')
 
     def analisar_padroes(self, *args, **kwargs):
         # depende do Observatório: não finge que existe

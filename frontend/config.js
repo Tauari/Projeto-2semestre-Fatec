@@ -3,11 +3,12 @@ const meta = document.querySelector('meta[name="aurora-api"]');
 export const CONFIG = {
   apiBase: (meta && meta.content) || '/api/v1',
   janelaDias: 30,                 // relatos visíveis no mapa (vem de /config quando há servidor)
+  hexRelatosM: 150,               // raio do hexágono dos relatos, em metros
   tiposMax: 4,                    // tipos por relato
   textoMax: 300,                  // caracteres da descrição publicada
   precisaoCriado: 'exata',        // como o servidor arredonda a hora de envio: exata, hora ou dia
   atualizarRelatosSeg: 60,        // releitura periódica dos relatos no modo api
-  estatico: { dados: '../dados/data.json', apoio: '../dados/rede-de-apoio.json', mapaBase: '../dados/osm/basemap.json' },
+  estatico: { dados: '../dados/data.json', apoio: '../dados/rede-de-apoio.json', mapaBase: '../dados/osm/basemap.json', grafo: '../dados/rotas/grafo.json' },
   ia: { provedor: 'heuristica', usaModelo: false }
 };
 export function aplicarConfigServidor(cfg) {

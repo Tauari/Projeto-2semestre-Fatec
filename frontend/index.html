@@ -5,8 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="Mapa colaborativo de segurança para mulheres em Rio Claro (SP): relatos anônimos, percepção da pesquisa, registros oficiais e onde pedir ajuda.">
 <meta name="theme-color" content="#2A2037">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icones/icone-192.png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Aurora">
 <title>Aurora Rio Claro</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..800&display=swap">
+<link rel="stylesheet" href="../vendor/fontes/fontes.css">
 <meta name="aurora-api" content="/api/v1">
 <link rel="stylesheet" href="../vendor/leaflet.css">
 <link rel="stylesheet" href="shared/app.css">
@@ -91,6 +96,34 @@
 
     <!-- ============ MAPA ============ -->
     <section class="view" id="view-mapa" data-title="Mapa colaborativo">
+      <div class="card mapcard">
+        <div class="mapbar">
+          <div class="seg" role="tablist" aria-label="Camada do mapa" id="layerSeg">
+            <button role="tab" data-layer="relatos"><span class="dot" style="background:var(--amb-3)"></span>Relatos <span class="cnt num" id="cntRel">0</span></button>
+            <button role="tab" data-layer="percepcao"><span class="dot" style="background:var(--lil-3)"></span>Percepção</button>
+            <button role="tab" data-layer="historico"><span class="dot" style="background:var(--rose-3)"></span><span class="long">Histórico</span>B.O.</button>
+          </div>
+        </div>
+        <div class="filters">
+          <select class="select" id="typeSel" aria-label="Tipo"></select>
+          <select class="select" id="periodSel" aria-label="Horário"></select>
+        </div>
+        <div class="mapwrap" id="mapwrap">
+          <div id="map" role="application" aria-label="Mapa de Rio Claro dividido em células de cerca de 1 km"></div>
+          <div class="map-chip"><svg class="i sm"><use href="#i-pin"/></svg>RIO CLARO <small>SP</small></div>
+          <div class="map-tools">
+            <button class="tool" id="btnLocate" hidden title="Mostrar onde estou"><svg class="i"><use href="#i-locate"/></svg></button>
+            <button class="tool" id="btnRoute"><svg class="i"><use href="#i-route"/></svg><span>Checar trajeto</span></button>
+          </div>
+          <div class="zoom"><button id="zin" aria-label="Aproximar">+</button><button id="zout" aria-label="Afastar">−</button></div>
+          <div class="pickbar" id="pickbar" hidden><span>Toque no mapa na área onde aconteceu</span><button id="pickCancel">Cancelar</button></div>
+          <div class="routebar" id="routebar" hidden><span id="routeMsg">Toque no ponto de partida</span><button id="routeClose">Fechar</button></div>
+          <div class="empty-hint" id="emptyHint" hidden></div>
+          <div class="panel" id="panel" hidden></div>
+        </div>
+        <div class="legend" id="legend"></div>
+        <p class="mapnote" id="mapNote"><svg class="i sm"><use href="#i-info"/></svg><span></span></p>
+        <div class="sheet-info" id="sheetInfo">
       <div class="hero">
         <div>
           <p class="eyebrow">Informação para o seu caminho</p>
@@ -105,36 +138,8 @@
         <div class="stat"><span class="ic lil"><svg class="i"><use href="#i-chat"/></svg></span><div><b class="num" id="stPesq">51</b><span>respostas à pesquisa</span><small id="stPesqQ">setembro 2026</small></div></div>
         <div class="stat"><span class="ic rose"><svg class="i"><use href="#i-layers"/></svg></span><div><b class="num" id="stBO">683</b><span>registros de B.O.</span><small>jan 2025 – abr 2026</small></div></div>
       </div>
-
-      <div class="card mapcard">
-        <div class="mapbar">
-          <div class="seg" role="tablist" aria-label="Camada do mapa" id="layerSeg">
-            <button role="tab" data-layer="relatos"><span class="dot" style="background:var(--amb-3)"></span>Relatos <span class="cnt num" id="cntRel">0</span></button>
-            <button role="tab" data-layer="percepcao"><span class="dot" style="background:var(--lil-3)"></span>Percepção</button>
-            <button role="tab" data-layer="historico"><span class="dot" style="background:var(--rose-3)"></span><span class="long">Histórico</span>B.O.</button>
-          </div>
-          <button class="icon-btn" data-act="sobre" data-tab="camadas" aria-label="O que cada camada mostra"><svg class="i"><use href="#i-info"/></svg></button>
+          <p class="credito">Mapa © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · células de ~1 km (dados) e ~150 m (relatos)</p>
         </div>
-        <div class="filters">
-          <div class="chips" id="periodChips" role="group" aria-label="Horário"></div>
-          <select class="select" id="typeSel" aria-label="Tipo"></select>
-          <span class="range" id="rangeLbl"></span>
-        </div>
-        <div class="mapwrap" id="mapwrap">
-          <div id="map" role="application" aria-label="Mapa de Rio Claro dividido em células de cerca de 1 km"></div>
-          <div class="map-chip"><svg class="i sm"><use href="#i-pin"/></svg>RIO CLARO <small>SP</small></div>
-          <div class="map-tools">
-            <button class="tool" id="btnLocate" hidden title="Mostrar onde estou"><svg class="i"><use href="#i-locate"/></svg></button>
-            <button class="tool" id="btnRoute"><svg class="i"><use href="#i-route"/></svg><span>Checar trajeto</span></button>
-          </div>
-          <div class="zoom"><button id="zin" aria-label="Aproximar">+</button><button id="zout" aria-label="Afastar">−</button></div>
-          <div class="legend" id="legend"></div>
-          <div class="pickbar" id="pickbar" hidden><span>Toque no mapa na área onde aconteceu</span><button id="pickCancel">Cancelar</button></div>
-          <div class="routebar" id="routebar" hidden><span id="routeMsg">Toque no ponto de partida</span><button id="routeClose">Fechar</button></div>
-          <div class="empty-hint" id="emptyHint" hidden></div>
-          <div class="panel" id="panel" hidden></div>
-        </div>
-        <p class="mapnote" id="mapNote"><svg class="i sm"><use href="#i-info"/></svg><span></span></p>
         <div class="areas">
           <div class="areas-head">
             <h2 id="areasTitle">Explore as áreas</h2>
@@ -146,6 +151,7 @@
       </div>
       <div class="foot">
         <span><svg class="i sm"><use href="#i-shield"/></svg>Informação com cuidado. Nenhum mapa garante segurança.</span>
+        <button class="linkbtn" data-act="sobre" data-tab="camadas"><svg class="i sm"><use href="#i-info"/></svg>O que cada camada mostra</button>
         <button class="linkbtn" data-act="sobre" data-tab="fontes">Fontes e metodologia <svg class="i sm"><use href="#i-out"/></svg></button>
       </div>
     </section>
@@ -248,8 +254,7 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-<script>if(!window.L){document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>')}</script>
+<script src="../vendor/leaflet.js"></script>
 <script type="module" src="main.js"></script>
 </body>
 </html>
