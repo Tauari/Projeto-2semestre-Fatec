@@ -40,5 +40,5 @@ def resumo(sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends
             for c in dados.percepcoes()],
         'classificacoes_automaticas': {'tipo_evidencia': TipoEvidencia.CLASSIFICACAO_AUTOMATICA.value,
                                        'total': sum(por_provedor.values()), 'por_provedor': por_provedor},
-        'analise_ia': {'tipo_evidencia': TipoEvidencia.ANALISE_IA.value, 'implementado': False},
+        'analise_ia': {'tipo_evidencia': TipoEvidencia.ANALISE_IA.value, 'implementado': True},
     }
