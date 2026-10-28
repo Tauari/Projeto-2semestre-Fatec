@@ -29,7 +29,7 @@ def mapa_rotas(cfg: Configuracoes = Depends(obter_configuracoes)):
     caminho = Path(cfg.pasta_dados) / 'rotas' / 'grafo.json'
     if not caminho.is_file():
         raise HTTPException(404, 'O grafo de ruas para rotas não está disponível.')
-    return FileResponse(caminho, media_type='application/json', headers={'Cache-Control': 'public, max-age=86400'})
+    return FileResponse(caminho, media_type='application/json', headers={'Cache-Control': 'no-cache'})
 
 
 @router.get('/mapa/base', response_class=FileResponse,
@@ -39,4 +39,4 @@ def mapa_base(cfg: Configuracoes = Depends(obter_configuracoes)):
     caminho = Path(cfg.pasta_dados) / 'osm' / 'basemap.json'
     if not caminho.is_file():
         raise HTTPException(404, 'O mapa de ruas não está disponível.')
-    return FileResponse(caminho, media_type='application/json', headers={'Cache-Control': 'public, max-age=86400'})
+    return FileResponse(caminho, media_type='application/json', headers={'Cache-Control': 'no-cache'})

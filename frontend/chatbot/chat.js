@@ -14,8 +14,8 @@ import { startPick } from '../mapa/selecao.js';
 import { reportItem } from '../relatos/item-relato.js';
 import { toggleFollow } from '../relatos/alertas.js';
 import { showApoioOnMap } from '../apoio/camada-apoio.js';
-import { heuristic, infoProvedorIA, extrairNoServidor } from './extracao.js';
-import { pedeRota, entenderRota, geocodificar } from './rota-conversa.js';
+import { heuristic, infoProvedorIA, extrairNoServidor, localNoServidor, tempoRelativo, periodoCoerente } from './extracao.js';
+import { pedeRota, entenderRota, geocodificar, achaLocal, semLocal } from './rota-conversa.js';
 import { startRoute, routeClick } from '../mapa/trajeto.js';
 import { MODOS } from '../mapa/roteador.js';
 
@@ -28,6 +28,8 @@ export const Chat = {
     $('#chatForm').addEventListener('submit', e => { e.preventDefault(); this.submit(); });
     ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.submit(); } });
     ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(120, ta.scrollHeight) + 'px'; });
+    $('#confirmSim').onclick = () => this.pendente && this.aceitarLocal(this.pendente);
+    $('#confirmNao').onclick = () => this.pendente && this.negarLocal();
     this.start();
     this.setAI(!!infoProvedorIA().usaModelo);
   },
@@ -49,7 +51,7 @@ export const Chat = {
     if (grid) this.quick.append(wrap);
   },
   start() {
-    this.draft = this.newDraft(); this.step = 'inicio'; this.busy = false;
+    this.draft = this.newDraft(); this.step = 'inicio'; this.busy = false; this.fechaConfirmacao();
     this.log.replaceChildren(); this.clearQuick();
     this.bot([h('span', null, 'Oi! Eu sou a Aurora. Te ajudo a registrar uma situação em Rio Claro para alertar outras mulheres. Você escolhe o que compartilhar.'),
       h('span', { class: 'note', text: 'Este relato não é um boletim de ocorrência. Em emergência, ligue 190.' })]);
@@ -90,17 +92,39 @@ export const Chat = {
     this.step = 'onde';
     const s = this.draft.sug;
     this.clearQuick();
-    if (s) {
-      this.bot('Pelo que você contou, foi perto de ' + s.nome + '. Posso marcar a área "' + areaName(s.cell) + '"?');
-      S.selected = s.cell; renderSelection();
-      this.quick.append(
-        h('button', { type: 'button', class: 'qr primary', onclick: () => { this.draft.sug = null; this.setCell(s.cell, 'Sim, pode marcar'); } }, 'Sim, pode marcar essa área'),
-        h('button', { type: 'button', class: 'qr', onclick: () => { this.draft.sug = null; this.pickOnMap(); } }, 'Prefiro marcar no mapa'),
-        this.bairroSearch());
-      return;
-    }
+    if (s) return this.confirmarLocal(s);
     this.bot([h('span', null, 'Onde foi? Marque no mapa ou busque o bairro.'), h('span', { class: 'note', text: 'Eu guardo só a região, uma área de cerca de 150 m. Nunca o endereço.' })]);
     this.quick.append(h('button', { type: 'button', class: 'qr primary', onclick: () => this.pickOnMap() }, 'Marcar no mapa'), this.bairroSearch());
+  },
+  /* a Aurora entendeu o lugar: o mapa aproxima e marca a região, e a pessoa confirma ou corrige */
+  confirmarLocal(s) {
+    this.pendente = s;
+    const COMO = { cruzamento: 'cruzamento das duas ruas', lugar: 'ponto de referência', rua: 'rua', bairro: 'bairro' };
+    this.bot([h('span', null, 'Pelo que você contou, foi aqui: ' + s.nome + ' (' + (COMO[s.como] || 'região') + '). Aproximei o mapa e marquei a região.'),
+      h('span', { class: 'note', text: 'Eu guardo só uma área de cerca de 150 m. Nunca a rua nem o endereço.' }), h('span', null, 'É aqui mesmo?')]);
+    showView('mapa'); S.selected = s.cell; renderSelection(); map.invalidateSize();
+    const ll = [s.lat, s.lng];
+    map.setView(ll, 16, { animate: true }); // aproxima na região; se a animação não rodar (aba em segundo plano), pula direto
+    setTimeout(() => { if (Math.abs(map.getZoom() - 16) > 0.1) map.setView(ll, 16, { animate: false }); }, 900);
+    $('#confirmbar').hidden = false;
+    if (isMobile()) { $('#chat').classList.add('picking'); document.body.style.overflow = ''; $('#mapwrap').scrollIntoView({ behavior: 'smooth', block: 'center' }); } // o chat sai da frente do mapa
+    this.clearQuick();
+    this.quick.append(
+      h('button', { type: 'button', class: 'qr primary', onclick: () => this.aceitarLocal(s) }, 'Sim, é aqui'),
+      h('button', { type: 'button', class: 'qr', onclick: () => this.negarLocal() }, 'Não, vou marcar no mapa'),
+      this.bairroSearch());
+  },
+  fechaConfirmacao() { this.pendente = null; $('#confirmbar').hidden = true; if (!S.pick) $('#chat').classList.remove('picking'); },
+  aceitarLocal(s) {
+    this.fechaConfirmacao(); if (isMobile()) openChat();
+    this.draft.sug = null; this.setCell(s.cell, 'Sim, é aqui');
+  },
+  negarLocal() {
+    this.fechaConfirmacao(); if (isMobile()) openChat();
+    this.draft.sug = null; S.selected = null; renderSelection();
+    this.me('Não é aqui');
+    this.bot('Tudo bem, vamos corrigir.');
+    this.pickOnMap();
   },
   bairroSearch() {
     const wrap = h('div', { class: 'bsearch' });
@@ -109,17 +133,18 @@ export const Chat = {
     inp.addEventListener('input', () => {
       ul.replaceChildren(); const q = inp.value.trim(); if (q.length < 2) return;
       const res = searchBairros(q).slice(0, 6);
-      for (const b of res) ul.append(h('li', null, h('button', { type: 'button', onclick: () => { this.draft.sug = null; this.setCell(cellOf(b.lat, b.lng, true), b.nome); } }, b.nome)));
+      for (const b of res) ul.append(h('li', null, h('button', { type: 'button', onclick: () => { this.fechaConfirmacao(); this.draft.sug = null; this.setCell(cellOf(b.lat, b.lng, true), b.nome); } }, b.nome)));
       if (!res.length) ul.append(h('li', { class: 'muted', style: 'font-size:14px;padding:6px 2px' }, 'Não achei esse bairro. Tente marcar no mapa.'));
     });
     wrap.append(inp, ul); return wrap;
   },
   pickOnMap() {
-    showView('mapa');
+    showView('mapa'); this.fechaConfirmacao();
     this.bot('Toque no mapa na área onde aconteceu.');
     startPick(id => { openChat(); this.setCell(id); });
   },
   setCell(id, via) {
+    this.fechaConfirmacao();
     this.draft.cell = id; S.selected = id; renderSelection();
     this.me(via ? via : 'Marquei no mapa');
     this.bot('Anotado: ' + areaName(id) + '. No mapa aparece só essa região.');
@@ -164,8 +189,8 @@ export const Chat = {
     if (pedeRota(text)) { this.draft = this.newDraft(); this.step = 'inicio'; return this.pedirRota(text); }
     if (this.step === 'fim' || this.step === 'inicio') this.draft = this.newDraft();
     if (this.step === 'onde') {
-      const b = findBairroInText(text);
-      if (b) { this.draft.sug = { cell: cellOf(b.lat, b.lng, true), nome: b.nome }; return this.askOnde(); }
+      const { cand } = achaLocal(text);
+      if (cand) { this.draft.sug = { ...cand, cell: cellOf(cand.lat, cand.lng, true) }; return this.askOnde(); }
     }
     if (this.step === 'detalhes') return this.processDetails(text);
     if (this.step === 'revisao') { this.draft.texto = ''; this.draft.removidos = []; this.bot('Vou usar o que você escreveu como nova descrição.'); return this.processDetails(text); }
@@ -184,7 +209,7 @@ export const Chat = {
     const a = p.origem && geocodificar(p.origem), b = p.destino && geocodificar(p.destino);
     if (!a || !b) {
       const quais = [!a && (p.origem || 'o ponto de partida'), !b && (p.destino || 'o destino')].filter(Boolean).join(' e ');
-      this.bot('Não consegui achar ' + quais + ' no mapa. Tente o nome da rua ou do bairro, como "Rua 7" ou "Bela Vista".');
+      this.bot('Não consegui achar ' + quais + ' no mapa. Tente o nome de um lugar conhecido (como "Fatec" ou "Rodoviária"), da rua ou do bairro.');
       return false;
     }
     const modo = Object.hasOwn(MODOS, p.modo) ? p.modo : 'pe';
@@ -222,18 +247,28 @@ export const Chat = {
     const typing = this.aiOn ? this.bot('Lendo o que você escreveu…', 'typing') : null;
     const heur = heuristic(text);
     let res = this.aiOn ? await extrairNoServidor(text) : null; // sem modelo o texto não sai do aparelho
+    const ia = this.aiOn ? await localNoServidor(text) : null; // onde foi e o que é dado pessoal
     if (typing) typing.remove();
     if (res && res.fromAI) { if (!res.bairro) res.bairro = heur.bairro; if (!res.tipos.length) res.tipos = heur.tipos; }
     else if (!res) res = heur;
     this.busy = false;
+    const rel = tempoRelativo(text); if (rel) { res.quando = rel.quando; res.periodo = rel.periodo; } else if (res.fromAI) res.periodo = periodoCoerente(text, res.periodo); // "há 30 minutos": o relógio calcula, não o modelo
+    res.resposta = res.fromAI && res.tipos.length ? 'Sinto muito que isso tenha acontecido com você. Obrigada por contar.' : '';
     if (res.urgente) this.emergency(true);
     const d = this.draft, got = [];
+    const achou = achaLocal(text, ia || {});
     if (res.tipos.length && !d.tipos.length) { d.tipos = res.tipos; got.push(res.tipos.map(t => TIPO[t].label).join(', ')); }
     if (res.quando && !d.quando) { d.quando = res.quando; got.push('aconteceu ' + QUANDO[res.quando]); }
     if (res.periodo && !d.periodo) { d.periodo = res.periodo; d.periodoAsked = true; got.push(PER[res.periodo].long); }
-    if (res.descricao && !d.texto) { const sc = scrub(res.descricao); d.texto = sc.text.slice(0, CONFIG.textoMax); d.removidos = [...new Set([...(res.removidos || []), ...sc.removed])]; }
+    const desc = (ia && ia.descricao) || res.descricao;
+    if (desc && !d.texto) {
+      const limpa = semLocal(desc, achou.termos), sc = scrub(limpa), tirouLocal = limpa !== desc || achou.termos.length > 0;
+      d.texto = sc.text.slice(0, CONFIG.textoMax);
+      d.removidos = [...new Set([...(res.removidos || []), ...(ia ? ia.sensiveis : []), ...(tirouLocal ? ['rua e ponto de referência'] : []), ...sc.removed])];
+    }
     if (res.fromAI) d.origem = 'chat-ia';
-    if (res.bairro && !d.cell) { d.sug = { cell: cellOf(res.bairro.lat, res.bairro.lng, true), nome: res.bairro.nome }; got.push('perto de ' + res.bairro.nome); }
+    if (achou.cand && !d.cell) { d.sug = { ...achou.cand, cell: cellOf(achou.cand.lat, achou.cand.lng, true) }; got.push('local: ' + achou.cand.nome); }
+    else if (res.bairro && !d.cell) { d.sug = { cell: cellOf(res.bairro.lat, res.bairro.lng, true), nome: res.bairro.nome, lat: res.bairro.lat, lng: res.bairro.lng, como: 'bairro' }; got.push('perto de ' + res.bairro.nome); }
     if (res.resposta) this.bot(res.resposta);
     if (got.length) this.bot('Anotei: ' + got.join(' · ') + '. Agora faltam alguns detalhes.');
     else if (!res.resposta) this.bot('Obrigada por contar. Vou te fazer perguntas rápidas para organizar o relato.');
@@ -253,8 +288,9 @@ export const Chat = {
         if (!d.periodo && res.periodo) { d.periodo = res.periodo; d.periodoAsked = true; }
       }
     }
-    const sc = scrub(texto);
-    d.texto = sc.text.slice(0, CONFIG.textoMax); d.removidos = [...new Set([...removidos, ...sc.removed])]; d.detalhesAsked = true;
+    const termos = achaLocal(text).termos, semRua = semLocal(texto, termos);
+    const sc = scrub(semRua);
+    d.texto = sc.text.slice(0, CONFIG.textoMax); d.removidos = [...new Set([...removidos, ...(semRua !== texto ? ['rua e ponto de referência'] : []), ...sc.removed])]; d.detalhesAsked = true;
     this.busy = false;
     this.next();
   },

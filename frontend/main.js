@@ -4,7 +4,8 @@
 import { janelaTxt } from './config.js';
 import { $, $$, toast } from './shared/dom.js';
 import { fmtN } from './shared/formato.js';
-import { mq } from './shared/tema.js';
+import { mq, isDark } from './shared/tema.js';
+import { LS } from './shared/armazenamento-local.js';
 import { D, AP as AP_DADOS, carregarDados } from './shared/dados.js';
 import { configurarGrade } from './shared/grade.js';
 import { configurarBairros } from './shared/bairros.js';
@@ -69,6 +70,8 @@ export function boot() {
     if (S.view === 'moderacao') renderMod();
   });
   Store.init();
+  const tema = LS.get('tema', null); if (tema) document.documentElement.setAttribute('data-theme', tema); // escolha da pessoa vale mais que a do aparelho
+  $('#btnTema').onclick = () => { const t = isDark() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); LS.set('tema', t); };
   const onTheme = () => renderMap();
   if (mq.addEventListener) mq.addEventListener('change', onTheme);
   new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

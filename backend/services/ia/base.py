@@ -64,6 +64,10 @@ class ProvedorIA(ABC):
         """{'origem': str | None, 'destino': str | None, 'modo': 'pe' | 'bike' | 'carro' | None}."""
         raise CapacidadeNaoImplementada('Este provedor não entende pedidos de rota.')
 
+    def extrair_local(self, texto: str) -> dict:
+        """{'ruas': [...], 'pontos': [...], 'referencia': str | None, 'sensiveis': [...]}: onde foi e o que é dado pessoal."""
+        raise CapacidadeNaoImplementada('Este provedor não localiza endereços no texto.')
+
     def analisar_padroes(self, *args, **kwargs):
         # depende do Observatório: não finge que existe
         raise CapacidadeNaoImplementada('A análise de padrões por IA ainda não foi implementada.')

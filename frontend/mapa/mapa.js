@@ -2,14 +2,13 @@ import { janelaTxt } from '../config.js';
 import { $, $$, h, esc, cssVar, toast } from '../shared/dom.js';
 import { fmtN, plural } from '../shared/formato.js';
 import { STANDALONE } from '../shared/ambiente.js';
-import { isDark } from '../shared/tema.js';
 import { D, OSM } from '../shared/dados.js';
 import { cellOf, cellCenter, cellPoly } from '../shared/grade.js';
 import { BYNAME, areaName } from '../shared/bairros.js';
 import { S, periodOk } from '../shared/estado.js';
 import { showView } from '../shared/navegacao.js';
-import { layerValues, SCALES, classOf, tipoPorCelula } from './camadas.js';
-import { TIPO, TIPOS as TIPOS_ORD } from '../shared/vocabulario.js';
+import { layerValues, SCALES } from './camadas.js';
+import { criarCalor, rampaCss } from './calor.js';
 import { closePanel, openPanel } from './painel-area.js';
 import { renderAreaList } from './lista-areas.js';
 import { startRoute, routeClick, clearRoute } from './trajeto.js';
@@ -23,7 +22,7 @@ import { alertCount } from '../relatos/alertas.js';
 import { Chat, relatar, openChat, closeChat } from '../chatbot/chat.js';
 
 /* ------------------------------------------------------------------ mapa */
-export let map, renderer, baseRenderer, hexLayer, labelLayer, pinLayer, routeLayer, selLayer, boundaryLine;
+export let calor, map, renderer, baseRenderer, hexLayer, labelLayer, pinLayer, routeLayer, selLayer, boundaryLine;
 export let C = {};
 export const hexes = new Map();
 export function readColors() {
@@ -149,13 +148,14 @@ export function initMap() {
   map = L.map('map', { zoomControl: false, attributionControl: false, preferCanvas: true, minZoom: 11, maxZoom: 17.5, zoomSnap: 0.5,
     maxBounds: [[-22.62, -47.84], [-22.18, -47.38]], maxBoundsViscosity: 0.8 });
   map.fitBounds([[-22.456, -47.622], [-22.364, -47.528]], { padding: [8, 8], animate: false });
-  for (const [name, zi, pe] of [['base', 250, 'none'], ['cells', 420, ''], ['labels', 460, 'none'], ['apoio', 610, '']]) {
+  for (const [name, zi, pe] of [['base', 250, 'none'], ['calor', 410, 'none'], ['cells', 420, ''], ['labels', 460, 'none'], ['apoio', 610, '']]) {
     const pane = map.createPane(name); pane.style.zIndex = zi; if (pe) pane.style.pointerEvents = pe;
   }
   baseRenderer = L.canvas({ pane: 'base', padding: 0.25 });
   renderer = L.canvas({ pane: 'cells', padding: 0.3, tolerance: 2 });
   initBaseMap();
   boundaryLine = L.polygon(D.boundary, { renderer: baseRenderer, interactive: false, fill: false, color: C.boundary, weight: 1.6, dashArray: '6 6' }).addTo(map);
+  calor = criarCalor(map, 'calor');
   hexLayer = L.layerGroup().addTo(map);
   selLayer = L.layerGroup().addTo(map);
   routeLayer = L.layerGroup().addTo(map);
@@ -164,13 +164,23 @@ export function initMap() {
   pinLayer = L.layerGroup().addTo(map);
   initApoioLayer();
   styleBaseMap(); renderApoio(); placeLabels();
-  map.on('zoomend', () => { styleBaseMap(); styleHexes(); renderApoio(); placeLabels(); });
+  map.on('zoomend', () => { styleBaseMap(); renderApoio(); placeLabels(); renderPins(); });
   map.on('moveend', placeLabels);
   map.on('click', onMapClick);
-  $('#legend').addEventListener('click', e => { if (e.target.closest('.apkey')) setApoio(!S.apoio); });
+  $('#legend').addEventListener('click', e => {
+    if (e.target.closest('.apkey')) setApoio(!S.apoio);
+  });
   $('#zin').onclick = () => map.zoomIn();
   $('#zout').onclick = () => map.zoomOut();
-  $('#btnRoute').onclick = () => (S.routeMode || (S.route && S.route.a) ? clearRoute() : startRoute());
+  const escolha = $('#rotaEscolha');
+  $('#btnRoute').onclick = () => (S.routeMode || (S.route && S.route.a) ? clearRoute() : (escolha.hidden = false));
+  escolha.addEventListener('click', e => { // fora da caixa ou nos botões
+    const a = e.target.closest('[data-rota]') ? e.target.closest('[data-rota]').dataset.rota : e.target === escolha ? 'cancelar' : null;
+    if (!a) return;
+    escolha.hidden = true;
+    if (a === 'mapa') startRoute();
+    else if (a === 'digitar') { openChat(); Chat.formRota(); }
+  });
   $('#routeClose').onclick = clearRoute;
   $('#pickCancel').onclick = () => { stopPick(); openChat(); Chat.bot('Tudo bem. Você pode buscar o bairro pelo nome.'); };
   if (STANDALONE && 'geolocation' in navigator) {
@@ -189,34 +199,52 @@ export function renderMap() {
   if (!map) return;
   const prevGround = C.ground; readColors();
   if (C.ground !== prevGround) styleBaseMap();
-  styleHexes(layerValues());
+  const vals = layerValues(); ensureHexes(vals); renderCalor(vals);
   renderPins(); renderSelection(); renderLegend(); renderNote(); renderAreaList(); renderEmptyHint(); updateCounts();
 }
-/* as células ficam mais transparentes de perto para as ruas continuarem legíveis */
-export function styleHexes(vals) {
-  if (!map) return;
-  vals = vals || layerValues();
-  const sc = SCALES[S.layer], ramp = sc.vars.map(cssVar), z = map.getZoom();
-  const op = (isDark() ? 0.62 : 0.5) * Math.max(0.42, Math.min(1, 1 - (z - 13) * 0.2)), w = z >= 15 ? 1.8 : 1.2;
-  for (const id of vals.keys()) ensureHex(id);
-  const tipos = S.layer === 'relatos' ? tipoPorCelula() : null;
-  for (const [id, poly] of hexes) {
-    const v = vals.get(id) || 0, k = v ? classOf(v, sc.breaks) : -1;
-    if (k < 0) { poly.setStyle(baseStyle()); continue; }
-    const cor = tipos ? TIPO[tipos.get(id)].cor : null;
-    poly.setStyle(cor ? { stroke: true, color: cor, weight: w, opacity: 0.95, fill: true, fillColor: cor, fillOpacity: Math.min(0.85, op * (0.7 + 0.25 * k)) }
-      : { stroke: true, color: ramp[3], weight: w, opacity: 0.9, fill: true, fillColor: ramp[k], fillOpacity: op });
-  }
+/* as células não são desenhadas: o calor e os círculos mostram os dados; elas só dão a dica ao passar o mouse */
+export function ensureHexes(vals) { if (map) for (const id of vals.keys()) ensureHex(id); }
+/* mapa de calor: uma mancha por área, do tamanho da área (150 m nos relatos, ~1 km nos outros dados) */
+export function renderCalor(vals) {
+  calor.desenhar([...vals].map(([id, v]) => [cellCenter(id), v]), S.layer === 'relatos' ? 180 : 700, SCALES[S.layer].breaks[3], S.layer === 'relatos' ? 26 : 36);
 }
+/* relatos com o calor ligado: círculos com a contagem que se juntam ao afastar o mapa e se separam ao aproximar (como o MarkerCluster do notebook) */
+const GRUPO_PX = 70;
+export function agrupar(por) {
+  const z = map.getZoom(), g = new Map();
+  for (const [id, n] of por) {
+    const ll = cellCenter(id), p = map.project(ll, z), k = Math.floor(p.x / GRUPO_PX) + '_' + Math.floor(p.y / GRUPO_PX);
+    const c = g.get(k) || g.set(k, { n: 0, x: 0, y: 0, ids: [] }).get(k);
+    c.n += n; c.x += p.x * n; c.y += p.y * n; c.ids.push(id);
+  }
+  return [...g.values()].map(c => Object.assign(c, { ll: map.unproject(L.point(c.x / c.n, c.y / c.n), z) }));
+}
+/* verde-claro com pouco, amarelo e laranja com mais, translúcido */
+const corGrupo = n => (n < 3 ? ['rgba(181,226,140,.55)', 'rgba(110,204,57,.6)'] : n < 10 ? ['rgba(241,211,87,.55)', 'rgba(240,194,12,.6)'] : ['rgba(253,156,115,.55)', 'rgba(241,128,23,.6)']);
 export function renderPins() {
   pinLayer.clearLayers();
   const reps = S.layer === 'relatos' ? filteredReports() : recentReports().filter(periodOk);
   const by = new Map(); for (const r of reps) by.set(r.cell, (by.get(r.cell) || 0) + 1);
+  const abre = (ev, id) => { L.DomEvent.stopPropagation(ev); if (S.pick || S.routeMode) { onMapClick(ev); return; } openPanel(id); };
+  if (S.layer === 'relatos') {
+    for (const c of agrupar(by)) {
+      const [fora, dentro] = corGrupo(c.n), tam = 30 + Math.min(18, String(c.n).length * 6 + c.ids.length), uni = c.ids.length === 1;
+      const ic = L.divIcon({ className: '', html: '<span class="grupo" style="width:' + tam + 'px;height:' + tam + 'px;background:' + fora + '"><b style="background:' + dentro + '">' + c.n + '</b></span>', iconSize: [0, 0] });
+      const m = L.marker(c.ll, { icon: ic, keyboard: false, riseOnHover: true, title: plural(c.n, 'relato', 'relatos') + (uni ? ' · ' + areaName(c.ids[0]) : ' · aproxime para separar') });
+      m.on('click', ev => {
+        if (uni || S.pick || S.routeMode) { abre(ev, c.ids[0]); return; }
+        L.DomEvent.stopPropagation(ev);
+        map.flyToBounds(L.latLngBounds(c.ids.map(cellCenter)).pad(0.5), { maxZoom: map.getMaxZoom(), duration: 0.5 });
+      });
+      m.addTo(pinLayer);
+    }
+    return;
+  }
   const faint = S.layer !== 'relatos';
   for (const [id, n] of by) {
     const ic = L.divIcon({ className: '', html: '<span class="pin' + (faint ? ' faint' : '') + '">' + n + '</span>', iconSize: [0, 0] });
     const m = L.marker(cellCenter(id), { icon: ic, keyboard: false, riseOnHover: true, title: plural(n, 'relato recente', 'relatos recentes') + ' · ' + areaName(id) });
-    m.on('click', ev => { L.DomEvent.stopPropagation(ev); if (S.pick || S.routeMode) { onMapClick(ev); return; } openPanel(id); });
+    m.on('click', ev => abre(ev, id));
     m.addTo(pinLayer);
   }
 }
@@ -251,9 +279,8 @@ export function renderSelection() {
 export function renderLegend() {
   const sc = SCALES[S.layer], el = $('#legend');
   const anyRecent = recentReports().some(periodOk);
-  const presentes = S.layer === 'relatos' ? new Set(tipoPorCelula().values()) : null;
-  const chave = presentes ? (presentes.size ? '<div class="ramp tipos-leg">' + TIPOS_ORD.filter(t => presentes.has(t.id)).map(t => '<span><i style="background:' + t.cor + '"></i>' + esc(t.label) + '</span>').join('') + '</div><small>Cor: tipo mais relatado na área. Mais forte: mais relatos.</small>' : '')
-    : '<div class="ramp">' + sc.vars.map((v, i) => '<span><i style="background:var(' + v + ')"></i>' + sc.labels[i] + '</span>').join('') + '</div>';
+  const dica = { relatos: 'Círculo: quantos relatos. Aproxime o mapa para separar, afaste para juntar.', percepcao: 'Mais quente: mais mulheres citaram a área.', historico: 'Mais quente: mais registros de B.O. na área.' }[S.layer];
+  const chave = '<div class="calor-leg"><i style="background:' + rampaCss() + '"></i><span>menos</span><span>mais</span></div><small>' + dica + '</small>';
   el.innerHTML = '<b>' + sc.title + '</b>' + chave +
     (S.layer !== 'relatos' && anyRecent ? '<div class="pinkey"><span class="pin faint" style="position:static;transform:none"></span>relatos recentes</div>' : '') +
     (APOIO.length ? '<button type="button" class="apkey' + (S.apoio ? ' on' : '') + '" aria-pressed="' + S.apoio + '" title="' + (S.apoio ? 'Esconder' : 'Mostrar') + ' delegacia, Guarda, assistência social, Justiça e saúde 24h">' +

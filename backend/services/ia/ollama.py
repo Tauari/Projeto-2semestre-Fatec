@@ -7,16 +7,18 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 
 import httpx
 
 from backend.config import obter_configuracoes
-from backend.services.anonimizacao import anonimizar_texto
+from backend.services.enderecos import anonimizar_completo
 from backend.services.ia.base import ContextoIA, ProvedorIA, ResultadoExtracao
 from backend.services.ia.heuristico import ProvedorHeuristico
 from backend.services.ia.prompts import montar_prompt_extracao, validar_saida_extracao
 
 log = logging.getLogger(__name__)
+_SENSIVEL = re.compile(r'nome|apelido|telefone|placa|n[úu]mero|endere|perfil|rede|f[íi]sic|e-?mail|cpf|documento', re.I)
 
 
 class ProvedorOllama(ProvedorIA):
@@ -47,9 +49,42 @@ class ProvedorOllama(ProvedorIA):
         o = o if isinstance(o, dict) else {}
         return {'origem': nome(o.get('origem')), 'destino': nome(o.get('destino')), 'modo': o.get('modo') if o.get('modo') in ('pe', 'bike', 'carro') else None}
 
+    def extrair_local(self, texto: str) -> dict:
+        # o modelo só vê o texto já sem nomes, telefones, placas e números de casa
+        seguro = anonimizar_completo(texto)
+        prompt = ('Você é a Aurora, assistente de um mapa de segurança para mulheres em Rio Claro (SP). Leia o relato e separe ONDE foi e o que é dado pessoal. '
+                  'Use só o que está escrito; não invente.\n'
+                  '- ruas: ruas e avenidas do lugar ONDE ACONTECEU (não a rua onde ela mora), como escritas (ex.: "Rua 5", "Avenida 14"), sem número de casa; no máximo 4.\n'
+                  '- pontos: lugares conhecidos usados como referência (ex.: "Fatec", "rodoviária", "shopping", "Santa Casa"); no máximo 3.\n'
+                  '- referencia: o trecho do relato que diz onde foi (ex.: "Rua 5 com Avenida 14, na frente da Fatec"), ou null.\n'
+                  '- sensiveis: o que no relato é dado pessoal ou revela um lugar exato: nome, apelido, telefone, placa, número de casa, endereço exato, '
+                  'perfil de rede social, característica física muito específica. Escreva só o tipo (ex.: "nome", "placa"), nunca o dado. [] se nada.\n'
+                  '- descricao: o relato reescrito em primeira pessoa, 1 ou 2 frases, até 200 caracteres, SEM ruas, avenidas, pontos de referência, nomes, telefones, placas ou números de casa. Mantenha o que ajuda a entender a situação e a reconhecer quem agrediu pelas roupas e acessórios (ex.: "boina verde", "capuz cinza", "camiseta azul", "moto preta"). TIRE a descrição física da pessoa (altura, peso, cor da pele, cabelo, barba, tatuagem, cicatriz, idade). "" se não houver situação.\n'
+                  'Exemplo: Mensagem: "Fui seguida ontem na rua 7 esquina com a av 29, perto do Shopping, o cara alto e careca de boina verde se chamava Zé"\n'
+                  'Resposta: {"ruas":["Rua 7","Avenida 29"],"pontos":["Shopping"],"referencia":"Rua 7 esquina com a Avenida 29, perto do Shopping","sensiveis":["nome"],"descricao":"Fui seguida por um homem de boina verde."}\n\n'
+                  'Responda só com JSON: {"ruas":[],"pontos":[],"referencia":null,"sensiveis":[],"descricao":""}\n\nMensagem: "' + seguro.texto[:1000].replace('"', "'") + '"')
+        try:
+            r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
+                'model': self.modelo, 'prompt': prompt, 'format': 'json', 'stream': False, 'keep_alive': '30m', 'options': {'temperature': 0}})
+            r.raise_for_status()
+            o = json.loads(r.json()['response'])
+        except (httpx.HTTPError, ValueError, KeyError) as e:
+            log.warning('ollama indisponível ou resposta inválida (%s): sem local', type(e).__name__)
+            o = {}
+        o = o if isinstance(o, dict) else {}
+
+        def lista(chave, maximo, tamanho):
+            v = o.get(chave)
+            return [x.strip()[:tamanho] for x in v if isinstance(x, str) and x.strip() and x.strip().lower() not in ('null', 'none')][:maximo] if isinstance(v, list) else []
+        ref = o.get('referencia')
+        return {'ruas': lista('ruas', 4, 60), 'pontos': lista('pontos', 3, 60),
+                'referencia': anonimizar_completo(ref.strip()[:160]).texto if isinstance(ref, str) and ref.strip() else None,
+                'sensiveis': list(dict.fromkeys(seguro.removidos + [s for s in lista('sensiveis', 6, 30) if _SENSIVEL.search(s)]))[:6],  # o modelo às vezes chama roupa de dado sensível
+                'descricao': anonimizar_completo(desc.strip()[:220]).texto if isinstance(desc := o.get('descricao'), str) else ''}
+
     def extrair(self, texto: str, contexto: ContextoIA) -> ResultadoExtracao:
         # o modelo só vê o texto já sem nomes, telefones e placas: um modelo pequeno deixaria passar dado pessoal
-        seguro = anonimizar_texto(texto)
+        seguro = anonimizar_completo(texto)
         prompt = montar_prompt_extracao(seguro.texto, [b.nome for b in contexto.bairros])
         try:
             r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
@@ -65,7 +100,7 @@ class ProvedorOllama(ProvedorIA):
         if res is None:
             return heur
         # o modelo pode deixar passar um dado pessoal: a descrição passa de novo pela limpeza antes de sair
-        limpo = anonimizar_texto(res.descricao)
+        limpo = anonimizar_completo(res.descricao)
         res.descricao = limpo.texto
         res.removidos = list(dict.fromkeys(seguro.removidos + limpo.removidos))[:6]
         # dia e horário são regras fixas (ex.: "21h" = 20-22): a heurística acerta mais que um modelo de 3B; o modelo só completa

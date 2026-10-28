@@ -90,6 +90,7 @@
       <div class="crumbs">Rio Claro <svg class="i sm"><use href="#i-chev"/></svg> <b id="crumb">Mapa colaborativo</b></div>
       <div class="top-actions">
         <span class="chip-lock"><svg class="i sm"><use href="#i-lock"/></svg><span>Sem identificação no relato</span></span>
+        <button class="quick-exit" id="btnTema" type="button" aria-label="Alternar entre tema claro e escuro" title="Tema claro / escuro">◐</button>
         <button class="quick-exit" data-act="sair" title="Sai do app na hora (atalho: Esc duas vezes)">Sair rápido <svg class="i sm"><use href="#i-out"/></svg></button>
       </div>
     </header>
@@ -117,6 +118,7 @@
           </div>
           <div class="zoom"><button id="zin" aria-label="Aproximar">+</button><button id="zout" aria-label="Afastar">−</button></div>
           <div class="pickbar" id="pickbar" hidden><span>Toque no mapa na área onde aconteceu</span><button id="pickCancel">Cancelar</button></div>
+          <div class="pickbar confirmbar" id="confirmbar" hidden><span>É aqui?</span><button id="confirmSim">Sim</button><button id="confirmNao">Não</button></div>
           <div class="routebar" id="routebar" hidden><span id="routeMsg">Toque no ponto de partida</span><button id="routeClose">Fechar</button></div>
           <div class="empty-hint" id="emptyHint" hidden></div>
           <div class="panel" id="panel" hidden></div>
@@ -232,6 +234,16 @@
   <button data-view="dados"><svg class="i"><use href="#i-chart"/></svg>Dados</button>
   <button data-view="apoio"><svg class="i"><use href="#i-heart"/></svg>Apoio</button>
 </nav>
+
+<div class="modal" id="rotaEscolha" hidden role="dialog" aria-modal="true" aria-labelledby="rotaEscolhaT">
+  <div class="box rota-escolha" tabindex="-1">
+    <header><h2 id="rotaEscolhaT">Como quer indicar o trajeto?</h2><button class="icon-btn" data-rota="cancelar" aria-label="Fechar"><svg class="i"><use href="#i-x"/></svg></button></header>
+    <div class="content">
+      <button type="button" class="btn primary" data-rota="mapa"><svg class="i"><use href="#i-pin"/></svg>Escolher no mapa</button>
+      <button type="button" class="btn" data-rota="digitar"><svg class="i"><use href="#i-search"/></svg>Digitar os endereços de partida e chegada</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="sobre" hidden role="dialog" aria-modal="true" aria-labelledby="sobreT">
   <div class="box" tabindex="-1">

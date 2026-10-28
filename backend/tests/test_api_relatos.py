@@ -62,6 +62,16 @@ def test_anonimizacao_no_servidor(cliente, sessao):
     assert 'Pedro' not in guardado.texto and '99876' not in guardado.texto
 
 
+def test_numero_do_imovel_nao_fica_no_relato(cliente, sessao):
+    r = cliente.post(API + '/relatos', json=_corpo(texto='homem armado roubando na rua 2 cj endereço 1532, perto da Rua das Flores 45'))
+    assert r.status_code == 201
+    corpo = r.json()
+    assert '1532' not in r.text and '45' not in corpo['relato']['texto']
+    assert 'rua 2 cj' in corpo['relato']['texto']  # o número da rua fica; só o do imóvel sai
+    assert 'número de endereço' in corpo['anonimizacao']['removidos']
+    assert '1532' not in RepositorioRelatos(sessao).obter(corpo['relato']['id']).texto
+
+
 def test_tipos_sem_repetir_filtrados_e_no_maximo_4(cliente):
     r = cliente.post(API + '/relatos', json=_corpo(tipos=['assedio', 'assedio', 'xyz', 'roubo', 5, None, 'perseguicao', 'roubo',
                                                           'violencia', 'ambiente', 'veiculo']))

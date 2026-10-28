@@ -28,7 +28,7 @@ from backend.database.tabelas import Relato
 from backend.models.comum import Erro, ErroValidacao, texto_bem_formado
 from backend.models.relatos import ListaRelatos, RelatoEntrada, RelatoPublico, RespostaRelato, RespostaRelatoCriado
 from backend.models.vocabulario import TipoEvidencia
-from backend.services.anonimizacao import anonimizar_texto
+from backend.services.enderecos import anonimizar_completo
 from backend.services.ia import ContextoIA, obter_provedor
 from backend.services.retencao import aplicar_retencao, limite_retencao_ms
 from backend.services.texto import fatiar_js
@@ -93,7 +93,7 @@ def obter(relato_id: str, sessao: Session = Depends(obter_sessao), cfg: Configur
 @router.post('/relatos', status_code=201, response_model=RespostaRelatoCriado, responses={422: {'model': ErroValidacao}})
 def criar(entrada: RelatoEntrada, sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends(obter_configuracoes)):
     aplicar_retencao(sessao)  # com prazo configurado, apaga o que venceu (também sem reiniciar o servidor)
-    limpo = anonimizar_texto(entrada.texto)
+    limpo = anonimizar_completo(entrada.texto)
     texto = texto_bem_formado(fatiar_js(limpo.texto, cfg.relatos_texto_max))
     chave = secrets.token_urlsafe(24)
     relato = RepositorioRelatos(sessao).criar(

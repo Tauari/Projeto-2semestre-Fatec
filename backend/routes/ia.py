@@ -12,7 +12,7 @@ from backend.config import Configuracoes, obter_configuracoes
 from backend.database.repositorios import RepositorioDados
 from backend.database.sessao import obter_sessao
 from backend.models.comum import Erro, ErroValidacao, texto_bem_formado
-from backend.models.ia import EntradaExtracao, InfoProvedor, RespostaExtracao, RespostaRota
+from backend.models.ia import EntradaExtracao, InfoProvedor, RespostaExtracao, RespostaLocal, RespostaRota
 from backend.models.vocabulario import TipoEvidencia
 from backend.services.ia import CapacidadeNaoImplementada, ContextoIA, obter_provedor
 
@@ -30,6 +30,17 @@ def rota(entrada: EntradaExtracao, cfg: Configuracoes = Depends(obter_configurac
     p = obter_provedor(cfg.ia_provedor)
     try:
         r = p.extrair_rota(entrada.texto)
+    except CapacidadeNaoImplementada as e:
+        raise HTTPException(501, str(e))
+    return {'provedor': p.nome, **r}
+
+
+@router.post('/ia/local', response_model=RespostaLocal, responses={422: {'model': ErroValidacao}, 501: {'model': Erro}})
+def local(entrada: EntradaExtracao, cfg: Configuracoes = Depends(obter_configuracoes)):
+    """Separa, num relato por extenso, o lugar (ruas, pontos de referência) e o que é dado pessoal. Não guarda nem registra o texto."""
+    p = obter_provedor(cfg.ia_provedor)
+    try:
+        r = p.extrair_local(entrada.texto)
     except CapacidadeNaoImplementada as e:
         raise HTTPException(501, str(e))
     return {'provedor': p.nome, **r}

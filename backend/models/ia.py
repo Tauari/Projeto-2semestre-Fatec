@@ -49,6 +49,16 @@ class RespostaRota(BaseModel):
     modo: Literal['pe', 'bike', 'carro'] | None
 
 
+class RespostaLocal(BaseModel):
+    """O que o modelo entendeu como lugar no texto (só para achar a região no mapa; nada disso é guardado ou publicado)."""
+    provedor: str
+    ruas: list[str]
+    pontos: list[str]
+    referencia: str | None
+    sensiveis: list[str]
+    descricao: str
+
+
 class InfoProvedor(BaseModel):
     nome: str
     usa_modelo: bool
