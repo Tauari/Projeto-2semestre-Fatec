@@ -82,9 +82,15 @@ def test_mapa_base_igual_ao_arquivo(cliente):
     r = cliente.get(API + '/mapa/base')
     assert r.status_code == 200
     assert r.headers['content-type'].startswith('application/json')
-    assert r.headers['cache-control'] == 'public, max-age=86400'
+    assert r.headers['cache-control'] == 'no-cache'
     assert r.content == (DADOS / 'osm' / 'basemap.json').read_bytes()
     assert r.json() == _ler('osm/basemap.json')
+
+
+def test_grafo_de_rotas_igual_ao_arquivo(cliente):
+    r = cliente.get(API + '/mapa/rotas')
+    assert r.status_code == 200
+    assert r.content == (DADOS / 'rotas' / 'grafo.json').read_bytes()
 
 
 def test_listas_de_conjuntos(cliente):

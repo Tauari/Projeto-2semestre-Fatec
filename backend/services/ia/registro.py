@@ -33,3 +33,4 @@ def obter_provedor(nome: str | None = None) -> ProvedorIA:
 
 
 registrar_provedor('heuristica', ProvedorHeuristico)
+registrar_provedor('ollama', lambda: __import__('backend.services.ia.ollama', fromlist=['ProvedorOllama']).ProvedorOllama())

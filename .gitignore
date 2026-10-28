@@ -9,3 +9,4 @@ dist/aurora-link.html
 .pytest_cache/
 backend/database/*.db
 backend/database/*.db-journal
+dados/osm/bruto/

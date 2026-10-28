@@ -37,6 +37,9 @@ class Configuracoes(BaseSettings):
     # tamanho máximo do corpo de uma requisição (bytes): um relato tem poucos KB; acima disso, 413
     limite_corpo_bytes: int = Field(64 * 1024, ge=1024)
     ia_provedor: str = 'heuristica'
+    ia_modelo: str = 'qwen2.5:3b'
+    ia_ollama_url: str = 'http://localhost:11434'
+    ia_timeout_s: float = Field(60.0, gt=0)
     ia_classificar_ao_criar: bool = True
 
 

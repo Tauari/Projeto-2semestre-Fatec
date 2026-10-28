@@ -5,16 +5,16 @@ registra o texto recebido.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.config import Configuracoes, obter_configuracoes
 from backend.database.repositorios import RepositorioDados
 from backend.database.sessao import obter_sessao
-from backend.models.comum import ErroValidacao, texto_bem_formado
-from backend.models.ia import EntradaExtracao, InfoProvedor, RespostaExtracao
+from backend.models.comum import Erro, ErroValidacao, texto_bem_formado
+from backend.models.ia import EntradaExtracao, InfoProvedor, RespostaExtracao, RespostaLocal, RespostaRota
 from backend.models.vocabulario import TipoEvidencia
-from backend.services.ia import ContextoIA, obter_provedor
+from backend.services.ia import CapacidadeNaoImplementada, ContextoIA, obter_provedor
 
 router = APIRouter(tags=['ia'])
 
@@ -24,6 +24,28 @@ def provedor(cfg: Configuracoes = Depends(obter_configuracoes)):
     return obter_provedor(cfg.ia_provedor).info()
 
 
+@router.post('/ia/rota', response_model=RespostaRota, responses={422: {'model': ErroValidacao}, 501: {'model': Erro}})
+def rota(entrada: EntradaExtracao, cfg: Configuracoes = Depends(obter_configuracoes)):
+    """Entende "uma rota da Rua X até a Rua Y". Não guarda nem registra o texto."""
+    p = obter_provedor(cfg.ia_provedor)
+    try:
+        r = p.extrair_rota(entrada.texto)
+    except CapacidadeNaoImplementada as e:
+        raise HTTPException(501, str(e))
+    return {'provedor': p.nome, **r}
+
+
+@router.post('/ia/local', response_model=RespostaLocal, responses={422: {'model': ErroValidacao}, 501: {'model': Erro}})
+def local(entrada: EntradaExtracao, cfg: Configuracoes = Depends(obter_configuracoes)):
+    """Separa, num relato por extenso, o lugar (ruas, pontos de referência) e o que é dado pessoal. Não guarda nem registra o texto."""
+    p = obter_provedor(cfg.ia_provedor)
+    try:
+        r = p.extrair_local(entrada.texto)
+    except CapacidadeNaoImplementada as e:
+        raise HTTPException(501, str(e))
+    return {'provedor': p.nome, **r}
+
+
 @router.post('/ia/extrair', response_model=RespostaExtracao, responses={422: {'model': ErroValidacao}})
 def extrair(entrada: EntradaExtracao, sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends(obter_configuracoes)):
     p = obter_provedor(cfg.ia_provedor)
@@ -31,7 +53,7 @@ def extrair(entrada: EntradaExtracao, sessao: Session = Depends(obter_sessao), c
     bairro = {'nome': r.bairro.nome, 'lat': r.bairro.lat, 'lng': r.bairro.lng} if r.bairro is not None else None
     return {
         'provedor': p.nome,
-        'usa_modelo': p.usa_modelo,
+        'usa_modelo': r.por_modelo,
         'tipo_evidencia': TipoEvidencia.CLASSIFICACAO_AUTOMATICA.value,
         'resultado': {'urgente': bool(r.urgente), 'tipos': list(r.tipos), 'bairro': bairro, 'quando': r.quando,
                       'periodo': r.periodo, 'descricao': texto_bem_formado(r.descricao), 'removidos': list(r.removidos),

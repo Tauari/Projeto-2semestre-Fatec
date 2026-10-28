@@ -10,10 +10,10 @@
   --lil-1:#E7DCF5; --lil-2:#C8ACE7; --lil-3:#9E77D0; --lil-4:#6D44A8;
   --amb-1:#FADFBE; --amb-2:#F3B670; --amb-3:#E2863A; --amb-4:#B45C15;
   --ok:#2E7A59; --ok-soft:#E3F2EA; --danger:#B42318; --danger-soft:#FCEBE9; --warn-soft:#FFF4E0;
-  --map-ground:#F1EEF4; --map-road:#FFFFFF; --map-road-case:#DCD5E5; --map-road-major:#FFFFFF; --map-road-major-case:#C4B8D4;
-  --map-water:#BAD4E9; --map-green:#DAE7D2; --map-park:#CCE2C4; --map-campus:#E8DFF3; --map-campus-line:#D2C3E5; --map-rail:#A89EB5;
-  --map-lbl-street:#6B6278; --map-lbl-water:#4A7596; --map-lbl-green:#47724C; --map-lbl-campus:#6A4C9C;
-  --boundary:#8E80A3; --lbl:#66567F; --lbl-halo:#F1EEF4;
+  --map-ground:#F2F1EC; --map-road:#FFFFFF; --map-road-case:#E0DED7; --map-road-major:#FDEBB3; --map-road-major-case:#E5C46A;
+  --map-water:#A9D3F5; --map-green:#E1EDD8; --map-park:#C5E5BC; --map-campus:#EBE4D8; --map-campus-line:#D9CFBD; --map-rail:#B7B3AA;
+  --map-lbl-street:#5F6368; --map-lbl-water:#3B73A8; --map-lbl-green:#3E7A47; --map-lbl-campus:#7A624A;
+  --boundary:#8E80A3; --lbl:#6B6F76; --lbl-halo:#F2F1EC;
   --ap-policia:#2F5DA8; --ap-mulher:#8A3FA0; --ap-justica:#4D5565; --ap-social:#0B7A70; --ap-saude:#C2352B;
   --shadow:0 1px 2px rgba(35,26,48,.05),0 10px 30px rgba(35,26,48,.07);
   --shadow-pop:0 2px 6px rgba(35,26,48,.10),0 18px 48px rgba(35,26,48,.18);
@@ -35,10 +35,10 @@
     --lil-1:#34284B; --lil-2:#4F3977; --lil-3:#7C59B3; --lil-4:#B895E9;
     --amb-1:#4B3214; --amb-2:#80511D; --amb-3:#C4792E; --amb-4:#F4A95E;
     --ok:#7ED1A8; --ok-soft:#1D3A2D; --danger:#FF8A7D; --danger-soft:#3E1D1A; --warn-soft:#3A2C12;
-    --map-ground:#18131E; --map-road:#2E2639; --map-road-case:#110D16; --map-road-major:#3C3249; --map-road-major-case:#110D16;
-    --map-water:#1C2D3D; --map-green:#1B281F; --map-park:#1F3224; --map-campus:#2A2237; --map-campus-line:#3B304C; --map-rail:#5F5571;
-    --map-lbl-street:#A99FB7; --map-lbl-water:#80A9C9; --map-lbl-green:#88B18C; --map-lbl-campus:#BA9FE2;
-    --boundary:#7D6F92; --lbl:#CBBDDC; --lbl-halo:#18131E;
+    --map-ground:#1E2126; --map-road:#363A41; --map-road-case:#15171B; --map-road-major:#5A4F34; --map-road-major-case:#15171B;
+    --map-water:#16283D; --map-green:#1C2A21; --map-park:#20382A; --map-campus:#2B2822; --map-campus-line:#3D382E; --map-rail:#585C63;
+    --map-lbl-street:#A8ADB5; --map-lbl-water:#7FAEDB; --map-lbl-green:#8DBB92; --map-lbl-campus:#C2AE94;
+    --boundary:#7D6F92; --lbl:#C5CAD2; --lbl-halo:#1E2126;
     --ap-policia:#8CB0F2; --ap-mulher:#D9A3EE; --ap-justica:#BAC2CF; --ap-social:#5ED3C5; --ap-saude:#FF8C80;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
     --shadow-pop:0 2px 6px rgba(0,0,0,.4),0 18px 48px rgba(0,0,0,.5);
@@ -56,10 +56,10 @@
   --lil-1:#34284B; --lil-2:#4F3977; --lil-3:#7C59B3; --lil-4:#B895E9;
   --amb-1:#4B3214; --amb-2:#80511D; --amb-3:#C4792E; --amb-4:#F4A95E;
   --ok:#7ED1A8; --ok-soft:#1D3A2D; --danger:#FF8A7D; --danger-soft:#3E1D1A; --warn-soft:#3A2C12;
-  --map-ground:#18131E; --map-road:#2E2639; --map-road-case:#110D16; --map-road-major:#3C3249; --map-road-major-case:#110D16;
-  --map-water:#1C2D3D; --map-green:#1B281F; --map-park:#1F3224; --map-campus:#2A2237; --map-campus-line:#3B304C; --map-rail:#5F5571;
-  --map-lbl-street:#A99FB7; --map-lbl-water:#80A9C9; --map-lbl-green:#88B18C; --map-lbl-campus:#BA9FE2;
-  --boundary:#7D6F92; --lbl:#CBBDDC; --lbl-halo:#18131E;
+  --map-ground:#1E2126; --map-road:#363A41; --map-road-case:#15171B; --map-road-major:#5A4F34; --map-road-major-case:#15171B;
+  --map-water:#16283D; --map-green:#1C2A21; --map-park:#20382A; --map-campus:#2B2822; --map-campus-line:#3D382E; --map-rail:#585C63;
+  --map-lbl-street:#A8ADB5; --map-lbl-water:#7FAEDB; --map-lbl-green:#8DBB92; --map-lbl-campus:#C2AE94;
+  --boundary:#7D6F92; --lbl:#C5CAD2; --lbl-halo:#1E2126;
     --ap-policia:#8CB0F2; --ap-mulher:#D9A3EE; --ap-justica:#BAC2CF; --ap-social:#5ED3C5; --ap-saude:#FF8C80;
   --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
   --shadow-pop:0 2px 6px rgba(0,0,0,.4),0 18px 48px rgba(0,0,0,.5);
@@ -154,7 +154,11 @@ p{margin:0}
 .stat small{display:block;color:var(--ink-3);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-top:6px}
 
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-l);box-shadow:var(--shadow)}
-.mapcard{margin-top:22px;overflow:hidden}
+.mapcard{margin-top:12px;overflow:hidden}
+.sheet-info{padding:6px 18px 14px;background:var(--surface)}
+.sheet-info .hero{padding:18px 0 16px}
+.credito{margin-top:12px;font-size:12px;color:var(--ink-3)}
+.credito a{color:inherit}
 .mapbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px 10px}
 .seg{display:flex;background:var(--surface-2);border-radius:12px;padding:4px;gap:2px;overflow-x:auto;scrollbar-width:none}
 .seg::-webkit-scrollbar{display:none}
@@ -162,15 +166,9 @@ p{margin:0}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(35,26,48,.08),0 0 0 1px var(--line)}
 .seg .dot{width:9px;height:9px;border-radius:50%}
 .seg .cnt{font-size:12.5px;background:var(--amb-1);color:var(--amb-4);border-radius:99px;padding:0 7px;font-weight:700}
-.filters{display:flex;align-items:center;gap:10px;padding:4px 18px 14px;flex-wrap:wrap}
-.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0;flex:1 1 360px;padding:2px}
-.chips::-webkit-scrollbar{display:none}
-.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:99px;padding:6px 12px;font-size:13.5px;white-space:nowrap;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center}
-.chip:hover{border-color:var(--ink-3)}
-.chip.on{background:var(--ink);border-color:var(--ink);color:var(--surface)}
-.chip.now{border-style:dashed}
+.filters{display:flex;align-items:center;gap:8px;padding:4px 18px 14px}
+.filters .select{flex:1 1 0;min-width:0}
 .select{appearance:none;border:1px solid var(--line-2);background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23857B94' stroke-width='1.8'%3E%3Cpath d='m1 1.5 5 5 5-5'/%3E%3C/svg%3E") no-repeat right 12px center;border-radius:10px;padding:8px 34px 8px 12px;font-size:14px;max-width:100%}
-.range{color:var(--ink-3);font-size:13.5px;margin-left:auto}
 
 .mapwrap{position:relative;height:clamp(380px,60vh,620px);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--map-ground);isolation:isolate}
 #map{position:absolute;inset:0;background:var(--map-ground)}
@@ -182,14 +180,17 @@ p{margin:0}
 .zoom{position:absolute;right:14px;bottom:30px;z-index:500;display:flex;flex-direction:column;background:var(--surface);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
 .zoom button{width:38px;height:38px;border:0;background:transparent;font-size:20px;line-height:1;color:var(--ink)}
 .zoom button+button{border-top:1px solid var(--line)}
-.legend{position:absolute;left:14px;bottom:30px;z-index:500;background:var(--surface);border-radius:12px;padding:10px 12px;box-shadow:var(--shadow);font-size:12.5px;color:var(--ink-2);display:grid;gap:6px;max-width:calc(100% - 90px)}
+.legend{background:var(--surface);padding:12px 18px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--ink-2);display:grid;gap:6px}
 .legend b{color:var(--ink);font-size:13px}
 .legend .ramp{display:flex;gap:3px;align-items:flex-end}
 .legend .ramp span{display:grid;gap:3px;justify-items:center;font-size:11px;color:var(--ink-3)}
 .legend .ramp i{display:block;width:30px;height:12px;border-radius:3px}
-.legend .tipos-leg{flex-wrap:wrap;gap:4px 10px;max-width:260px}
+.legend .tipos-leg{flex-wrap:wrap;gap:4px 10px}
 .legend .tipos-leg span{display:flex;align-items:center;gap:5px}
 .legend .tipos-leg i,.legend .ramp.tipos-leg i{width:11px;height:11px;border-radius:50%}
+.calor-leg{display:grid;grid-template-columns:1fr 1fr;gap:3px 0;font-size:11px;color:var(--ink-3)}
+.calor-leg i{grid-column:1/3;height:10px;border-radius:5px}
+.calor-leg span:last-child{text-align:right}
 .legend small{display:block;margin-top:5px;font-size:11px;color:var(--ink-3)}
 .legend .pinkey{display:flex;align-items:center;gap:6px}
 .pickbar,.routebar{position:absolute;left:50%;transform:translateX(-50%);top:64px;z-index:560;background:var(--ink);color:var(--surface);border-radius:12px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-pop);font-weight:700;font-size:14.5px;max-width:calc(100% - 28px)}
@@ -204,8 +205,6 @@ p{margin:0}
 /* leaflet overrides */
 .leaflet-container{font:inherit;background:var(--map-ground)!important;outline:0}
 .leaflet-container.picking,.leaflet-container.picking .leaflet-interactive{cursor:crosshair!important}
-.leaflet-control-attribution{background:color-mix(in srgb,var(--surface) 85%,transparent)!important;color:var(--ink-3)!important;font-size:10.5px!important;border-radius:6px 0 0 0}
-.leaflet-control-attribution a{color:var(--ink-2)!important}
 .lbl{pointer-events:none!important}
 .lbl span{position:absolute;transform:translate(-50%,-50%);white-space:nowrap;line-height:1.1;text-shadow:0 0 2px var(--lbl-halo),0 0 2px var(--lbl-halo),0 0 4px var(--lbl-halo),0 0 7px var(--lbl-halo)}
 .lbl.bairro span{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--lbl)}
@@ -218,6 +217,8 @@ p{margin:0}
 .lbl.poi.campus span{color:var(--map-lbl-campus);font-style:normal}
 .pin{position:absolute;transform:translate(-50%,-50%);min-width:26px;height:26px;padding:0 7px;border-radius:99px;background:var(--amb-3);color:#fff;border:2px solid var(--surface);display:grid;place-items:center;font-weight:700;font-size:12.5px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
 .pin.faint{opacity:.9;min-width:14px;height:14px;padding:0;font-size:0;border-width:2px}
+.grupo{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;border-radius:50%;cursor:pointer}
+.grupo b{width:calc(100% - 10px);height:calc(100% - 10px);border-radius:50%;display:grid;place-items:center;font-size:13px;color:var(--ink);font-weight:700}
 .pin.me{background:var(--brand)}
 .youare{position:absolute;transform:translate(-50%,-50%);width:16px;height:16px;border-radius:50%;background:#2B7DE9;border:3px solid #fff;box-shadow:0 0 0 6px rgba(43,125,233,.25)}
 .route-end{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700;font-size:12px;border:2px solid var(--surface)}
@@ -483,6 +484,8 @@ p{margin:0}
 .modrow .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 
 /* modal & toast & cover */
+.rota-escolha{width:min(420px,100%)}
+.rota-escolha .btn{justify-content:center;gap:8px;padding:13px 16px;text-align:left}
 .modal{position:fixed;inset:0;z-index:2000;background:rgba(20,14,28,.5);display:grid;place-items:center;padding:16px}
 .modal .box{background:var(--surface);border-radius:18px;box-shadow:var(--shadow-pop);width:min(680px,100%);max-height:min(88vh,860px);display:flex;flex-direction:column;overflow:hidden}
 .modal header{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px 0}
@@ -541,6 +544,19 @@ p{margin:0}
   .grid3{grid-template-columns:1fr 1fr}
 }
 @media (max-width:720px){
+  #view-mapa{padding-bottom:72px}
+  .mapbar .seg{flex:1;overflow:visible;padding:3px;gap:2px}
+  .mapbar .seg button{flex:1;justify-content:center;padding:8px 4px;font-size:13px;gap:5px}
+  .mapbar .seg .cnt{padding:0 5px}
+  .gaveta{position:fixed;left:0;right:0;bottom:calc(var(--tab-h) + env(safe-area-inset-bottom,0px));z-index:1400;height:56px;display:flex;flex-direction:column;background:var(--surface);border-radius:18px 18px 0 0;box-shadow:0 -4px 14px rgba(0,0,0,.28);overflow:hidden}
+  .gaveta.anim{transition:height .22s ease}
+  .gaveta-alca{flex:none;width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;color:var(--ink);padding:8px 0 10px;font-weight:700;font-size:15px;touch-action:none}
+  .gaveta-alca .grip{width:38px;height:4px;border-radius:99px;background:var(--ink-3);opacity:.6}
+  .gaveta-corpo{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+  .gaveta.com-painel .gaveta-corpo>:not(#panel){display:none}
+  .gaveta .panel{position:static;width:auto;max-height:none;border-radius:0;box-shadow:none;overflow:visible}
+  .gaveta .panel .body{overflow:visible}
+
   .hero{padding:22px 0 16px}
   .hero .btn.primary{width:100%}
   .stats{grid-template-columns:1fr 1fr 1fr}
@@ -552,14 +568,19 @@ p{margin:0}
   .stat small{font-size:10.5px;letter-spacing:.04em}
   .mapbar{padding:12px 12px 8px}
   .filters{padding:2px 12px 12px}
-  .range{margin-left:0;width:100%}
   .mapwrap{height:clamp(360px,64vh,560px)}
-  .legend{bottom:22px;padding:8px 10px}
   .legend .ramp i{width:24px}
-  .zoom{bottom:22px}
+  .zoom{bottom:64px}
   .map-chip small{display:none}
   .tool span{display:none}
-  .panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:78%}
+  .panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:58%}
+  .panel[data-kind=route]{max-height:48%}
+  .panel[data-kind=route] .body{padding:0 14px 8px}
+  .panel[data-kind=route] .psec{padding:8px 0}
+  .panel[data-kind=route] header{padding:10px 14px 8px}
+  .panel[data-kind=route] header h3{font-size:18px;margin-top:2px}
+  .panel[data-kind=route] .actions{padding:8px 12px 10px}
+  .panel[data-kind=route] .actions .btn:first-child{grid-column:auto}
   .areas{padding:4px 12px 8px}
   .grid2,.grid3{grid-template-columns:1fr}
   .chip-lock{display:none}

@@ -21,7 +21,7 @@ async function carregarDaApi() {
     apiGet('/dados-oficiais/' + encodeURIComponent(cp.dado_oficial)),
     apiGet('/percepcao/' + encodeURIComponent(cp.percepcao)),
     opcional(apiGet('/apoio')),
-    opcional(apiGet('/mapa/base'))
+    opcional(apiGet('/mapa/base?v=4'))
   ]);
   return { D: { ...geo.dados, bo: oficial.dados, pesq: percepcao.dados }, AP: apoio ? apoio.dados : null, OSM: base };
 }

@@ -91,3 +91,67 @@ def test_extrair_meio_emoji_no_corte(cliente):
     r = cliente.post(API + '/ia/extrair', json={'texto': 'x' * 299 + '😀 fim'})
     assert r.status_code == 200
     assert r.json()['resultado']['descricao'] == 'x' * 299 + '�'
+
+
+# ------------------------------------------------------------------ POST /ia/rota
+
+def test_rota_sem_modelo_responde_501(cliente):
+    r = cliente.post(API + '/ia/rota', json={'texto': 'rota da rua 7 até a rua 3'})
+    assert r.status_code == 501
+
+
+def test_rota_com_ollama(criar_cliente, monkeypatch):
+    import httpx
+    resposta = {'origem': 'Rua 7', 'destino': 'Avenida 29', 'modo': 'bike'}
+    monkeypatch.setattr(httpx, 'post', lambda *a, **k: httpx.Response(
+        200, json={'response': json.dumps(resposta)}, request=httpx.Request('POST', 'http://x')))
+    c = criar_cliente(ia_provedor='ollama')
+    r = c.post(API + '/ia/rota', json={'texto': 'rota da rua 7 até a avenida 29 de bicicleta'})
+    assert r.status_code == 200 and r.json() == {'provedor': 'ollama', **resposta}
+
+
+def test_rota_com_ollama_desligado_devolve_vazio(criar_cliente, monkeypatch):
+    import httpx
+
+    def quebra(*a, **k):
+        raise httpx.ConnectError('desligado')
+    monkeypatch.setattr(httpx, 'post', quebra)
+    r = criar_cliente(ia_provedor='ollama').post(API + '/ia/rota', json={'texto': 'rota da rua 7 até a rua 3'})
+    assert r.json() == {'provedor': 'ollama', 'origem': None, 'destino': None, 'modo': None}
+
+
+# ------------------------------------------------------------------ POST /ia/local
+
+def test_local_sem_modelo_responde_501(cliente):
+    assert cliente.post(API + '/ia/local', json={'texto': 'rua 5 com avenida 14'}).status_code == 501
+
+
+def test_local_com_ollama_separa_lugar_e_dado_pessoal(criar_cliente, monkeypatch):
+    import httpx
+    enviado = {}
+
+    def responde(url, json=None, **k):
+        enviado['prompt'] = json['prompt']
+        saida = {'ruas': ['Rua 5', 'Avenida 14', 5], 'pontos': ['Fatec'], 'referencia': 'Rua 5 com Avenida 14, na frente da Fatec, endereço 1532',
+                 'sensiveis': ['nome'], 'descricao': 'Um homem gritou coisas, ligue 19 99876-5432'}
+        return httpx.Response(200, json={'response': __import__('json').dumps(saida)}, request=httpx.Request('POST', 'http://x'))
+    monkeypatch.setattr(httpx, 'post', responde)
+    c = criar_cliente(ia_provedor='ollama')
+    r = c.post(API + '/ia/local', json={'texto': 'sofri assédio na rua 5 com avenida 14 na frente da fatec, me liga 19 99876-5432'})
+    assert r.status_code == 200
+    corpo = r.json()
+    assert corpo['ruas'] == ['Rua 5', 'Avenida 14'] and corpo['pontos'] == ['Fatec']
+    assert '1532' not in corpo['referencia']  # o número da casa não sai nem na referência
+    assert corpo['sensiveis'] == ['telefone', 'nome']
+    assert corpo['descricao'] == 'Um homem gritou coisas, ligue [telefone]'
+    assert '99876' not in enviado['prompt']  # o modelo nunca vê o telefone
+
+
+def test_local_com_ollama_desligado_devolve_vazio(criar_cliente, monkeypatch):
+    import httpx
+
+    def quebra(*a, **k):
+        raise httpx.ConnectError('desligado')
+    monkeypatch.setattr(httpx, 'post', quebra)
+    r = criar_cliente(ia_provedor='ollama').post(API + '/ia/local', json={'texto': 'rua 5 com avenida 14'})
+    assert r.json() == {'provedor': 'ollama', 'ruas': [], 'pontos': [], 'referencia': None, 'sensiveis': [], 'descricao': ''}

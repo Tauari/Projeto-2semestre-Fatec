@@ -53,7 +53,7 @@ export function renderDados() {
     trow('Instituição responsável', t('Saber que existe participação de uma instituição responsável'), 'Painel de moderação para a equipe e o Observatório.') +
     trow('Saber quando aconteceu', t('Saber quando o relato aconteceu'), 'Cada relato mostra quando foi enviado, quando aconteceu e a faixa de horário.') +
     trow('Moderação', t('Saber que existe moderação'), 'Três sinalizações de informação falsa tiram o relato do mapa até revisão.') +
-    trow('Não identificar as pessoas', t('Saber que os relatos não identificam as pessoas'), 'Área de ~1 km, texto sem nomes, telefones e placas, relato gravado sem a conta de quem enviou.') +
+    trow('Não identificar as pessoas', t('Saber que os relatos não identificam as pessoas'), 'Área de ~150 m, texto sem nomes, telefones e placas, relato gravado sem a conta de quem enviou.') +
     trow('Denunciar informação falsa', t('Poder denunciar informações falsas'), 'Botão “Informação falsa” em cada relato.') +
     trow('Não acusar pessoas individualmente', t('Saber que o sistema não acusa pessoas individualmente'), 'A Aurora reescreve o texto descrevendo a situação, sem identificar ninguém.') +
     '</tbody></table></div></div>' +

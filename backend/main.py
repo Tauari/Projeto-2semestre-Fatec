@@ -86,6 +86,15 @@ def _eh_da_api(caminho: str) -> bool:
     return caminho == '/api' or caminho.startswith('/api/')
 
 
+class _EstaticosSemCache(StaticFiles):
+    """O frontend muda toda hora: o navegador confere a cada abertura se há versão nova (e não baixa de novo se nada mudou)."""
+
+    async def get_response(self, path, scope):
+        r = await super().get_response(path, scope)
+        r.headers['Cache-Control'] = 'no-cache'
+        return r
+
+
 class _MontagemFrontend(Mount):
     """Frontend em ``/``. Nunca responde por ``/api``: lá, um caminho desconhecido é um 404 em JSON da API."""
 
@@ -164,7 +173,7 @@ def create_app() -> FastAPI:
             app.mount('/vendor', StaticFiles(directory=vendor), name='vendor')
         if frontend.is_dir():
             # por último: "/" casa com tudo o que as rotas acima não pegaram
-            app.router.routes.append(_MontagemFrontend('/', app=StaticFiles(directory=frontend, html=True), name='frontend'))
+            app.router.routes.append(_MontagemFrontend('/', app=_EstaticosSemCache(directory=frontend, html=True), name='frontend'))
     return app
 
 

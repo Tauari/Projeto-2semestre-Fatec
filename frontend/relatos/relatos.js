@@ -5,7 +5,7 @@ import { Store } from '../shared/store.js';
 import { S, periodOk } from '../shared/estado.js';
 
 /* relatos: validação (dado compartilhado não é confiável) e visibilidade */
-export const CELL_RE = /^-?\d{1,3}_-?\d{1,3}$/;
+export const CELL_RE = /^f?-?\d{1,4}_-?\d{1,4}$/;
 export function cleanReport(r) {
   if (!r || typeof r !== 'object') return null;
   const tipos = Array.isArray(r.tipos) ? r.tipos.filter(t => TIPO[t]).slice(0, CONFIG.tiposMax) : [];

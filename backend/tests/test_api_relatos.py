@@ -62,6 +62,16 @@ def test_anonimizacao_no_servidor(cliente, sessao):
     assert 'Pedro' not in guardado.texto and '99876' not in guardado.texto
 
 
+def test_numero_do_imovel_nao_fica_no_relato(cliente, sessao):
+    r = cliente.post(API + '/relatos', json=_corpo(texto='homem armado roubando na rua 2 cj endereço 1532, perto da Rua das Flores 45'))
+    assert r.status_code == 201
+    corpo = r.json()
+    assert '1532' not in r.text and '45' not in corpo['relato']['texto']
+    assert 'rua 2 cj' in corpo['relato']['texto']  # o número da rua fica; só o do imóvel sai
+    assert 'número de endereço' in corpo['anonimizacao']['removidos']
+    assert '1532' not in RepositorioRelatos(sessao).obter(corpo['relato']['id']).texto
+
+
 def test_tipos_sem_repetir_filtrados_e_no_maximo_4(cliente):
     r = cliente.post(API + '/relatos', json=_corpo(tipos=['assedio', 'assedio', 'xyz', 'roubo', 5, None, 'perseguicao', 'roubo',
                                                           'violencia', 'ambiente', 'veiculo']))
@@ -75,7 +85,11 @@ def test_tipos_max_da_configuracao(criar_cliente):
     assert r.json()['relato']['tipos'] == ['assedio', 'roubo']
 
 
-@pytest.mark.parametrize('cell', ['abc', '', '1234_1', '1_1234', '0-0', '0_0\n', '\n0_0', ' 0_0', '0_0 ', '١_٢', '0_0_0',
+def test_celula_fina_de_200_m_e_aceita(cliente):
+    assert cliente.post(API + '/relatos', json=_corpo(cell='f-123_1234')).status_code == 201
+
+
+@pytest.mark.parametrize('cell', ['abc', '', '12345_1', '1_12345', 'ff1_1', 'f', '1f_1', '0-0', '0_0\n', '\n0_0', ' 0_0', '0_0 ', '١_٢', '0_0_0',
                                   5, None, ['0_0']])
 def test_celula_invalida_422(cliente, cell):
     r = cliente.post(API + '/relatos', json=_corpo(cell=cell))

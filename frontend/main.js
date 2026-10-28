@@ -4,7 +4,8 @@
 import { janelaTxt } from './config.js';
 import { $, $$, toast } from './shared/dom.js';
 import { fmtN } from './shared/formato.js';
-import { mq } from './shared/tema.js';
+import { mq, isDark } from './shared/tema.js';
+import { LS } from './shared/armazenamento-local.js';
 import { D, AP as AP_DADOS, carregarDados } from './shared/dados.js';
 import { configurarGrade } from './shared/grade.js';
 import { configurarBairros } from './shared/bairros.js';
@@ -14,9 +15,10 @@ import { showView } from './shared/navegacao.js';
 import { openSobre, closeSobre } from './shared/sobre.js';
 import { quickExit, instalarAtalhos } from './shared/saida-rapida.js';
 import { initMap, renderMap, setLayer } from './mapa/mapa.js';
+import { montarGaveta } from './mapa/gaveta.js';
 import { refreshPanel } from './mapa/painel-area.js';
 import { renderAreaList } from './mapa/lista-areas.js';
-import { renderChips, syncControls } from './mapa/controles.js';
+import { renderPeriodSel, syncControls } from './mapa/controles.js';
 import { configurarApoio } from './apoio/rede.js';
 import { showApoioOnMap } from './apoio/camada-apoio.js';
 import { renderApoioPage } from './apoio/pagina-apoio.js';
@@ -31,6 +33,7 @@ export function boot() {
   $('#stBO').textContent = fmtN(D.bo.total.n);
   $('#stPesq').textContent = D.pesq.n;
   for (const b of $$('#layerSeg button')) b.onclick = () => setLayer(b.dataset.layer);
+  $('#periodSel').onchange = e => { S.period = e.target.value; renderMap(); refreshPanel(); };
   $('#typeSel').onchange = e => { if (S.layer === 'relatos') S.tipo = e.target.value; else S.cat = e.target.value; renderMap(); };
   $('#areaSearch').addEventListener('input', renderAreaList);
   $('#areaMore').onclick = () => { S.showAll = !S.showAll; renderAreaList(); };
@@ -52,6 +55,7 @@ export function boot() {
       try { navigator.clipboard.writeText(txt).then(() => toast('Copiado: ' + txt), () => toast('Número: ' + txt)); } catch (err) { toast('Número: ' + txt); }
     }
   });
+  montarGaveta();
   syncControls();
   initMap();
   renderApoioPage();
@@ -66,10 +70,12 @@ export function boot() {
     if (S.view === 'moderacao') renderMod();
   });
   Store.init();
+  const tema = LS.get('tema', null); if (tema) document.documentElement.setAttribute('data-theme', tema); // escolha da pessoa vale mais que a do aparelho
+  $('#btnTema').onclick = () => { const t = isDark() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); LS.set('tema', t); };
   const onTheme = () => renderMap();
   if (mq.addEventListener) mq.addEventListener('change', onTheme);
   new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  setInterval(() => { renderChips(); if (S.period === 'agora') { renderMap(); refreshPanel(); } }, 5 * 60e3);
+  setInterval(() => { renderPeriodSel(); if (S.period === 'agora') { renderMap(); refreshPanel(); } }, 5 * 60e3);
 }
 /* os atalhos de teclado (Esc duas vezes = sair rápido) valem desde o início, como no legado */
 export async function iniciar() {

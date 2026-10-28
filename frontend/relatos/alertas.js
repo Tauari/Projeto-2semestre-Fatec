@@ -3,6 +3,7 @@ import { $, h, icon, toast } from '../shared/dom.js';
 import { DAY, plural } from '../shared/formato.js';
 import { STANDALONE } from '../shared/ambiente.js';
 import { D } from '../shared/dados.js';
+import { dentro, grossa } from '../shared/grade.js';
 import { areaName } from '../shared/bairros.js';
 import { Store } from '../shared/store.js';
 import { updateCounts } from '../mapa/mapa.js';
@@ -25,9 +26,9 @@ function ehNovo(r, visto, meus) {
   return r.criado > visto - margemCriadoMs();
 }
 export function alertCount() {
-  const areas = new Set(Store.perfil.areas); if (!areas.size) return 0;
+  const areas = Store.perfil.areas; if (!areas.length) return 0;
   const visto = Store.perfil.visto || 0, meus = new Set(Store.perfil.meus);
-  return recentReports().filter(r => areas.has(r.cell) && ehNovo(r, visto, meus)).length;
+  return recentReports().filter(r => areas.some(a => dentro(r.cell, a)) && ehNovo(r, visto, meus)).length;
 }
 export function renderAlertas(markSeen) {
   const el = $('#view-alertas'), areas = Store.perfil.areas, visto = Store.perfil.visto || 0, meus = new Set(Store.perfil.meus);
@@ -43,8 +44,8 @@ export function renderAlertas(markSeen) {
   } else {
     const list = h('div', { class: 'follow' });
     for (const id of areas) {
-      const rs = rec.filter(r => r.cell === id), n7 = rs.filter(r => r.criado > Date.now() - 7 * DAY).length, novos = rs.filter(r => ehNovo(r, visto, meus)).length;
-      const pc = D.pesq.cells[id];
+      const rs = rec.filter(r => dentro(r.cell, id)), n7 = rs.filter(r => r.criado > Date.now() - 7 * DAY).length, novos = rs.filter(r => ehNovo(r, visto, meus)).length;
+      const pc = D.pesq.cells[grossa(id)];
       const info = [plural(rs.length, 'relato em ' + janelaTxt(), 'relatos em ' + janelaTxt()) + (n7 ? ' (' + n7 + ' nesta semana)' : ''), pc ? 'citada por ' + plural(pc.n, 'mulher', 'mulheres') + ' na pesquisa' : ''].filter(Boolean).join(' · ');
       list.append(h('div', { class: 'card fcard' },
         h('div', null, h('h3', { text: areaName(id) }), h('p', null, info), novos ? h('p', { class: 'new' }, plural(novos, 'novo desde sua última visita', 'novos desde sua última visita')) : null),
@@ -53,7 +54,7 @@ export function renderAlertas(markSeen) {
           h('button', { class: 'btn sm ghost', type: 'button', onclick: () => { toggleFollow(id, false); renderAlertas(false); } }, 'Parar de acompanhar'))));
     }
     s1.append(list);
-    const novos = rec.filter(r => areas.includes(r.cell) && ehNovo(r, visto, meus));
+    const novos = rec.filter(r => areas.some(a => dentro(r.cell, a)) && ehNovo(r, visto, meus));
     if (novos.length) {
       const ul = h('ul', { class: 'reports', style: 'margin-top:14px' });
       for (const r of novos.slice(0, 10)) { const li = reportItem(r); li.prepend(h('b', { text: areaName(r.cell) })); ul.append(li); }

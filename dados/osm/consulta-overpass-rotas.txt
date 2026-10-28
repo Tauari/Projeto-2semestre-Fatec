@@ -1,0 +1,9 @@
+Consulta usada no Overpass API (19/10/2026) para o roteador do app (dados/osm/bruto/ruas-roteamento.json,
+fora do git: baixe de novo com esta consulta e rode scripts/preparar_rotas.py).
+Área: sul -22.475, oeste -47.645, norte -22.300, leste -47.495
+
+[out:json][timeout:180];
+way["highway"~"^(motorway|motorway_link|trunk|trunk_link|primary|primary_link|secondary|secondary_link|tertiary|tertiary_link|unclassified|residential|living_street|pedestrian|service|footway|path|cycleway|steps|track)$"](-22.475,-47.645,-22.300,-47.495);
+out geom;
+
+Dados © colaboradores do OpenStreetMap, licença ODbL (openstreetmap.org/copyright).

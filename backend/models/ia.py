@@ -1,6 +1,8 @@
 """Schemas Pydantic das rotas de IA (``/ia/provedor`` e ``/ia/extrair``)."""
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 from backend.models.comum import texto_bem_formado
@@ -38,6 +40,23 @@ class RespostaExtracao(BaseModel):
     usa_modelo: bool
     tipo_evidencia: str
     resultado: ResultadoExtracaoPublico
+
+
+class RespostaRota(BaseModel):
+    provedor: str
+    origem: str | None
+    destino: str | None
+    modo: Literal['pe', 'bike', 'carro'] | None
+
+
+class RespostaLocal(BaseModel):
+    """O que o modelo entendeu como lugar no texto (só para achar a região no mapa; nada disso é guardado ou publicado)."""
+    provedor: str
+    ruas: list[str]
+    pontos: list[str]
+    referencia: str | None
+    sensiveis: list[str]
+    descricao: str
 
 
 class InfoProvedor(BaseModel):

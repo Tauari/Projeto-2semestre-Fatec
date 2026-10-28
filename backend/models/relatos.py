@@ -16,7 +16,7 @@ from backend.models.comum import texto_bem_formado
 from backend.models.vocabulario import PERIODOS_POR_ID, QUANDO, TIPOS_POR_ID
 from backend.services.texto import regex_js
 
-CELL_RE = regex_js(r'^-?\d{1,3}_-?\d{1,3}$')
+CELL_RE = regex_js(r'^f?-?\d{1,4}_-?\d{1,4}$')
 TEXTO_MAX_ENTRADA = 2000
 
 

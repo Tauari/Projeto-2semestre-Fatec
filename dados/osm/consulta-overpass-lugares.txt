@@ -1,0 +1,19 @@
+Consulta usada no Overpass API para os lugares conhecidos de Rio Claro que a busca de trajeto reconhece pelo nome
+(dados/osm/bruto/lugares.json, fora do git: baixe de novo com esta consulta e rode scripts/preparar_lugares.py).
+Área: sul -22.470, oeste -47.640, norte -22.340, leste -47.500
+
+[out:json][timeout:150];
+(
+  nwr["name"]["amenity"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["office"="government"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["historic"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["public_transport"~"^(station|stop_area)$"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["railway"="station"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["shop"~"^(mall|supermarket|department_store)$"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["leisure"~"^(park|stadium|sports_centre|garden|playground)$"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["tourism"](-22.470,-47.640,-22.340,-47.500);
+  nwr["name"]["building"~"^(church|cathedral|chapel|hospital|university|school|college|stadium|train_station|civic|public)$"](-22.470,-47.640,-22.340,-47.500);
+);
+out center tags;
+
+Dados © colaboradores do OpenStreetMap, licença ODbL (openstreetmap.org/copyright).

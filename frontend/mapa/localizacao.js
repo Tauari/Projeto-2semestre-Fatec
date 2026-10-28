@@ -1,7 +1,7 @@
 import { toast } from '../shared/dom.js';
 import { plural } from '../shared/formato.js';
 import { D } from '../shared/dados.js';
-import { cellOf } from '../shared/grade.js';
+import { cellOf, grossa } from '../shared/grade.js';
 import { areaName } from '../shared/bairros.js';
 import { S } from '../shared/estado.js';
 import { Store } from '../shared/store.js';
@@ -33,7 +33,7 @@ export const Watch = {
     const ll = [p.coords.latitude, p.coords.longitude]; showMe(ll);
     const id = cellOf(...ll); if (id === this.cell) return;
     this.cell = id; if (S.view === 'alertas') renderAlertas(false);
-    const n = recentReports().filter(r => r.cell === id).length, pc = D.pesq.cells[id], fol = Store.perfil.areas.includes(id);
+    const n = recentReports().filter(r => grossa(r.cell) === id).length, pc = D.pesq.cells[id], fol = Store.perfil.areas.some(a => grossa(a) === id);
     if (!n && !(pc && pc.n >= 2) && !fol) return;
     if (this.last[id] && Date.now() - this.last[id] < 30 * 60e3) return;
     this.last[id] = Date.now();
