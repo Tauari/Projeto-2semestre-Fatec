@@ -5,6 +5,7 @@ import { TIPO, PERIODOS } from '../shared/vocabulario.js';
 import { D } from '../shared/dados.js';
 import { areaName } from '../shared/bairros.js';
 import { recentReports } from '../relatos/relatos.js';
+import { carregarPadroes } from './padroes.js';
 
 export function barsCard(title, items, total, { cls = '', sub = '', max } = {}) {
   const m = max || Math.max(1, ...items.map(x => x[1]));
@@ -23,6 +24,7 @@ export function renderDados() {
   el.innerHTML =
     '<div class="page-head"><p class="eyebrow">Dados e pesquisa</p><h1>O que Rio Claro já contou</h1>' +
     '<p>Duas fontes alimentam o mapa: a pesquisa “Segurança e percepção das mulheres em Rio Claro”, com ' + N + ' respostas entre ' + fmtDate(P.de) + ' e ' + fmtDate(P.ate) + ', e ' + fmtN(B.total.n) + ' registros de boletins de ocorrência da SSP-SP. Os relatos da comunidade entram ao vivo.</p></div>' +
+    '<div class="sec" id="padroes"></div>' +
     '<div class="grid2">' +
     kfig(pct(K.evitam, N), 'evitam passar por certos lugares da cidade', K.evitam + ' de ' + N + ' respostas') +
     kfig(pct(K.viveram, N), 'já viveram uma situação que as fez se sentir inseguras ou ameaçadas', K.viveram + ' de ' + N) +
@@ -75,6 +77,7 @@ export function renderDados() {
       : '<div class="card empty"><h3>Ainda não há relatos</h3><p>Quando as primeiras mulheres registrarem situações pelo chat, os tipos e horários aparecem aqui.</p></div>') +
     '</div>' +
     '<div class="sec note-box"><svg class="i"><use href="#i-info"/></svg><span>Percepção não é ocorrência, e registro de B.O. não é risco atual. As três camadas ficam separadas de propósito para que cada uma seja lida pelo que é. Detalhes em <button class="linkbtn" data-act="sobre" data-tab="fontes" style="text-decoration:underline">Fontes e método</button>.</span></div>';
+  carregarPadroes($('#padroes'));
 }
 export function kfig(v, label, small) { return '<div class="card kfig"><b class="num">' + v + '%</b><span>' + esc(label) + '</span><small>' + esc(small) + '</small></div>'; }
 export function trow(a, p, b) { return '<tr><td>' + esc(a) + '</td><td class="p num">' + p + '%</td><td>' + esc(b) + '</td></tr>'; }

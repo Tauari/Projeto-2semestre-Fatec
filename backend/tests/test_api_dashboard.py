@@ -19,7 +19,7 @@ def test_resumo_sem_relatos(cliente):
         'tipo_evidencia': 'relato_comunidade', 'janela_dias': 30, 'total': 0, 'por_tipo': {}, 'por_periodo': {}, 'por_celula': {},
         'aviso': 'Relatos enviados por usuárias, sem verificação individual. Mostram concentração de relatos, não risco.'}
     assert resumo['classificacoes_automaticas'] == {'tipo_evidencia': 'classificacao_automatica', 'total': 0, 'por_provedor': {}}
-    assert resumo['analise_ia'] == {'tipo_evidencia': 'analise_ia', 'implementado': False}
+    assert resumo['analise_ia'] == {'tipo_evidencia': 'analise_ia', 'implementado': True}
     d = json.loads((RAIZ / 'dados' / 'data.json').read_bytes().decode('utf-8'))
     assert resumo['dados_oficiais'] == [{'chave': 'bo-ssp-2025-2026', 'titulo': 'Boletins de ocorrência (SSP-SP, base R.D.O. via FALASP)',
                                          'periodo': d['bo']['periodo'], 'tipo_evidencia': 'dado_oficial',

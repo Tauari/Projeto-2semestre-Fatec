@@ -96,8 +96,8 @@ def test_moderacao_501(cliente, metodo):
 def test_ia_provedor(cliente):
     r = cliente.get(API + '/ia/provedor')
     assert r.status_code == 200
-    assert r.json() == {'nome': 'heuristica', 'usa_modelo': False, 'modelo': None, 'capacidades': ['extrair', 'classificar'],
-                        'nao_implementado': ['analise_padroes', 'analise_agregada', 'relatorios']}
+    assert r.json() == {'nome': 'heuristica', 'usa_modelo': False, 'modelo': None, 'capacidades': ['extrair', 'classificar', 'analise_padroes'],
+                        'nao_implementado': ['analise_agregada', 'relatorios']}
 
 
 def test_provedor_desconhecido_falha_na_inicializacao(configurar):

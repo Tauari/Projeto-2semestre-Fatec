@@ -103,15 +103,13 @@ def test_provedor_heuristico_classificar(bairros):
 
 def test_info_do_provedor():
     assert ProvedorHeuristico().info() == {
-        'nome': 'heuristica', 'usa_modelo': False, 'modelo': None, 'capacidades': ['extrair', 'classificar'],
-        'nao_implementado': ['analise_padroes', 'analise_agregada', 'relatorios'],
+        'nome': 'heuristica', 'usa_modelo': False, 'modelo': None, 'capacidades': ['extrair', 'classificar', 'analise_padroes'],
+        'nao_implementado': ['analise_agregada', 'relatorios'],
     }
 
 
 def test_capacidades_futuras_nao_fingem_que_existem():
     p = ProvedorHeuristico()
-    with pytest.raises(CapacidadeNaoImplementada):
-        p.analisar_padroes([])
     with pytest.raises(NotImplementedError):
         p.gerar_relatorio()
     assert issubclass(CapacidadeNaoImplementada, NotImplementedError)

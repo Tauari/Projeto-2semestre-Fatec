@@ -5,6 +5,7 @@ algo que não é o JSON esperado, volta para o provedor heurístico: o chat nunc
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import re
@@ -16,21 +17,54 @@ from backend.services.enderecos import anonimizar_completo
 from backend.services.ia.base import ContextoIA, ProvedorIA, ResultadoExtracao
 from backend.services.ia.heuristico import ProvedorHeuristico
 from backend.services.ia.prompts import montar_prompt_extracao, validar_saida_extracao
+from backend.services.padroes import narrativa_padrao, resumo_valido
 
 log = logging.getLogger(__name__)
+_RESUMOS: dict[str, str] = {}  # o mesmo conjunto de achados não pede o modelo de novo
 _SENSIVEL = re.compile(r'nome|apelido|telefone|placa|n[úu]mero|endere|perfil|rede|f[íi]sic|e-?mail|cpf|documento', re.I)
 
 
 class ProvedorOllama(ProvedorIA):
     nome = 'ollama'
     usa_modelo = True
-    capacidades = frozenset({'extrair', 'classificar'})
+    capacidades = frozenset({'extrair', 'classificar', 'analise_padroes'})
 
     def __init__(self) -> None:
         cfg = obter_configuracoes()
         self.modelo = cfg.ia_modelo
         self._url = cfg.ia_ollama_url.rstrip('/')
         self._timeout = cfg.ia_timeout_s
+
+    def analisar_padroes(self, resumo: dict) -> tuple[str, bool]:
+        """O modelo recebe só os achados já detectados (números e frases), nunca o texto de relatos, e só escreve o resumo.
+        O texto dele é recusado se prometer futuro ou usar número que não está nos achados: aí vale o resumo por regras."""
+        base = narrativa_padrao(resumo)
+        if not resumo['padroes']:
+            return base, False
+        chave = hashlib.sha256(json.dumps(resumo, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        if chave in _RESUMOS:
+            return _RESUMOS[chave], True
+        nomes = {f['id'].split(':')[0]: f['titulo'] for f in resumo['fontes']}
+        nomes['cruzada'] = 'Entre as fontes'
+        achados = '\n'.join(f'- [{nomes.get(p["fonte"].split(":")[0], p["fonte"])}] {p["titulo"]}: {p["descricao"]} (confiança {p["confianca"]})' for p in resumo['padroes'][:10])
+        faltas = '\n'.join(f'- {i["motivo"]}' for i in resumo['insuficiente'][:6]) or '- nenhum'
+        prompt = ('Você é a Aurora, assistente de um mapa colaborativo de segurança para mulheres em Rio Claro (SP). Escreva um resumo de 3 a 5 frases curtas, '
+                  'em português simples, para quem analisa os dados. Use SOMENTE os achados abaixo e os números deles: não invente número nem causa, e diga de qual fonte vem cada afirmação (relatos, B.O. ou pesquisa) sem misturá-las. Escreva em um parágrafo, sem lista. '
+                  'Fale do passado ("nos dados", "foram registrados"); nunca diga que algo vai acontecer, nem "certamente". Lembre que relatos mostram '
+                  'concentração de relatos, não risco. Se houver dados insuficientes, diga isso.\n\nAchados:\n' + achados + '\n\nDados insuficientes:\n' + faltas + '\n\nResumo:')
+        try:
+            r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
+                'model': self.modelo, 'prompt': prompt, 'stream': False, 'keep_alive': '30m', 'options': {'temperature': 0.2}})
+            r.raise_for_status()
+            texto = str(r.json()['response']).strip()
+        except (httpx.HTTPError, ValueError, KeyError) as e:
+            log.warning('ollama indisponível ou resposta inválida (%s): resumo por regras', type(e).__name__)
+            return base, False
+        if not resumo_valido(texto, resumo):
+            log.warning('resumo do modelo recusado (futuro ou número fora dos achados): resumo por regras')
+            return base, False
+        _RESUMOS[chave] = texto
+        return texto, True
 
     def extrair_rota(self, texto: str) -> dict:
         prompt = ('Você é a Aurora, assistente de um mapa de segurança em Rio Claro (SP). A pessoa quer uma rota. Extraia o ponto de partida, '

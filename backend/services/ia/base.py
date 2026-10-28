@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from backend.services.classificacao import Bairro
 
 # ordem em que as capacidades aparecem em info()
-CAPACIDADES_ATUAIS = ('extrair', 'classificar')
-CAPACIDADES_FUTURAS = ('analise_padroes', 'analise_agregada', 'relatorios')
+CAPACIDADES_ATUAIS = ('extrair', 'classificar', 'analise_padroes')
+CAPACIDADES_FUTURAS = ('analise_agregada', 'relatorios')
 
 
 @dataclass
@@ -68,9 +68,11 @@ class ProvedorIA(ABC):
         """{'ruas': [...], 'pontos': [...], 'referencia': str | None, 'sensiveis': [...]}: onde foi e o que é dado pessoal."""
         raise CapacidadeNaoImplementada('Este provedor não localiza endereços no texto.')
 
-    def analisar_padroes(self, *args, **kwargs):
-        # depende do Observatório: não finge que existe
-        raise CapacidadeNaoImplementada('A análise de padrões por IA ainda não foi implementada.')
+    def analisar_padroes(self, resumo: dict) -> tuple[str, bool]:
+        """(texto do resumo, se foi escrito por modelo). Os padrões já vêm detectados em ``resumo`` (services/padroes.py);
+        aqui só se escreve o texto. Sem modelo, o resumo é montado por regras."""
+        from backend.services.padroes import narrativa_padrao
+        return narrativa_padrao(resumo), False
 
     def gerar_relatorio(self, *args, **kwargs):
         raise CapacidadeNaoImplementada('Relatórios por IA ainda não foram implementados.')

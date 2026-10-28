@@ -9,7 +9,7 @@ class ProvedorHeuristico(ProvedorIA):
     nome = 'heuristica'
     usa_modelo = False
     modelo = None
-    capacidades = frozenset({'extrair', 'classificar'})
+    capacidades = frozenset({'extrair', 'classificar', 'analise_padroes'})
 
     def extrair(self, texto: str, contexto: ContextoIA) -> ResultadoExtracao:
         # texto inteiro, como heuristic() no legado; o corte em 1500 era só do prompt da IA (prompts.py)

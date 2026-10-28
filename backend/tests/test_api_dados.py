@@ -144,7 +144,7 @@ def test_evidencias_separadas(cliente, publicar):
     assert [c['tipo_evidencia'] for c in resumo['dados_oficiais']] == ['dado_oficial']
     assert [c['tipo_evidencia'] for c in resumo['percepcao']] == ['percepcao']
     assert resumo['classificacoes_automaticas']['tipo_evidencia'] == 'classificacao_automatica'
-    assert resumo['analise_ia'] == {'tipo_evidencia': 'analise_ia', 'implementado': False}
+    assert resumo['analise_ia'] == {'tipo_evidencia': 'analise_ia', 'implementado': True}
     # relatos nunca somados com B.O. nem com a pesquisa
     bo = _ler('data.json')['bo']
     assert resumo['relatos_comunidade']['total'] == 2
