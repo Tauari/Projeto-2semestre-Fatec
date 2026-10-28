@@ -344,7 +344,9 @@ export const Chat = {
   },
   emergency(auto) {
     const row = (n, l) => h('div', { class: 'num-row' }, h('div', null, h('strong', { class: 'num', text: n }), ' ', h('span', { text: l })),
-      h('button', { class: 'btn sm', type: 'button', 'data-copy': n }, icon('copy', 'i sm'), 'Copiar'));
+      h('div', { class: 'acts' },
+        h('a', { class: 'btn primary sm', href: 'tel:' + n, 'aria-label': 'Ligar para ' + n }, icon('phone', 'i sm'), 'Ligar'),
+        h('button', { class: 'btn sm', type: 'button', 'data-copy': n, 'aria-label': 'Copiar ' + n }, icon('copy', 'i sm'), 'Copiar')));
     this.card(h('div', { class: 'emerg' }, h('b', null, 'Se você está em perigo agora, peça ajuda:'),
       row('190', 'Polícia Militar'), row('180', 'Central de Atendimento à Mulher'), row('153', 'Guarda Civil Municipal'),
       h('span', { style: 'font-size:14px;color:var(--ink-2)' }, 'Se puder, vá para um lugar movimentado e iluminado e avise alguém de confiança.')));
