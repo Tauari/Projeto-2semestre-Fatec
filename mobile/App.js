@@ -13,7 +13,8 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
-const CHAVE_LINK = 'aurora.link';
+import { CHAVE_LINK, desligarModoAtencao, ligarModoAtencao, marcarMeuRelato, modoAtencaoLigado, retomarModoAtencao } from './alertas-proximos';
+
 const CELULA = /^f?-?\d{1,4}_-?\d{1,4}$/;
 const ROXO = '#2A2037';
 const LILAS = '#B18DE0';
@@ -113,6 +114,7 @@ export default function App() {
   const [area, setArea] = useState(null);
   const [aviso, setAviso] = useState(null);
   const [localizacao, setLocalizacao] = useState(false);
+  const [modoAtencao, setModoAtencao] = useState(false);
   const [pronto, setPronto] = useState(false);
   const [editando, setEditando] = useState(false);
   const [falha, setFalha] = useState(null);
@@ -133,7 +135,8 @@ export default function App() {
         const cel = resp && resp.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER ? resp.notification.request.content.data?.cell : null;
         if (typeof cel === 'string' && CELULA.test(cel)) setArea(cel);
         if (resp) Notifications.clearLastNotificationResponse();
-        localizacaoLiberada().then(ok => { if (vivo) setLocalizacao(ok); }, () => {});
+        const [loc, atencao] = await Promise.all([localizacaoLiberada().catch(() => false), retomarModoAtencao().then(() => modoAtencaoLigado())]);
+        if (vivo) { setLocalizacao(loc); setModoAtencao(atencao); }
         const t = await registrarPush();
         if (vivo) setToken(t);
       } catch (e) {
@@ -202,7 +205,7 @@ export default function App() {
     );
   }
 
-  const antes = `window.AuroraApp = ${JSON.stringify({ plataforma: 'expo', versao: 2, pushToken: token, areaInicial: area, localizacao })}; true;`;
+  const antes = `window.AuroraApp = ${JSON.stringify({ plataforma: 'expo', versao: 3, pushToken: token, areaInicial: area, localizacao, modoAtencao })}; true;`;
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
@@ -216,10 +219,18 @@ export default function App() {
           domStorageEnabled
           geolocationEnabled
           onMessage={async e => {
-            // a página pede a localização quando a pessoa liga o Modo atenção ou toca em "Mostrar onde estou"
+            // mensagens da página: pedir a localização ("Mostrar onde estou"), ligar ou desligar o Modo atenção e avisar do próprio relato
             let msg;
             try { msg = JSON.parse(e.nativeEvent.data); } catch { return; }
-            if (!msg || msg.tipo !== 'pedir-localizacao') return;
+            if (!msg) return;
+            if (msg.tipo === 'meu-relato') { marcarMeuRelato(msg.id); return; } // quem enviou o relato não é avisado dele
+            if (msg.tipo === 'modo-atencao') {
+              const r = msg.ligar === true ? await ligarModoAtencao() : await desligarModoAtencao();
+              setModoAtencao(!!r.ligado);
+              web.current?.injectJavaScript(`window.dispatchEvent(new CustomEvent('aurora-modo-atencao', { detail: ${JSON.stringify(r)} })); true;`);
+              return;
+            }
+            if (msg.tipo !== 'pedir-localizacao') return;
             const ok = await pedirLocalizacao();
             web.current?.injectJavaScript(`window.AuroraApp.localizacao = ${ok}; window.dispatchEvent(new CustomEvent('aurora-localizacao', { detail: { ok: ${ok} } })); true;`);
           }}

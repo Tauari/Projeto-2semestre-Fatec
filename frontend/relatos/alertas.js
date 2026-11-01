@@ -1,7 +1,7 @@
 import { janelaTxt, margemCriadoMs } from '../config.js';
 import { $, h, icon, toast } from '../shared/dom.js';
 import { DAY, plural } from '../shared/formato.js';
-import { STANDALONE, noApp } from '../shared/ambiente.js';
+import { STANDALONE, noApp, versaoApp } from '../shared/ambiente.js';
 import { D } from '../shared/dados.js';
 import { dentro, grossa } from '../shared/grade.js';
 import { areaName } from '../shared/bairros.js';
@@ -68,8 +68,8 @@ export function renderAlertas(markSeen) {
     const sw = h('button', { class: 'switch', type: 'button', role: 'switch', 'aria-checked': Watch.on ? 'true' : 'false', 'aria-label': 'Modo atenção' });
     sw.onclick = () => { if (Watch.on) Watch.stop(); else Watch.start(); renderAlertas(false); };
     s2.append(h('div', { class: 'card pad', style: 'display:grid;gap:10px' },
-      h('div', { class: 'toggle' }, sw, h('div', null, h('b', null, 'Modo atenção'), h('p', { class: 'muted', style: 'font-size:14px' }, 'Com a Aurora aberta, avisa com vibração quando você entra numa área com relatos recentes, citada na pesquisa ou que você acompanha. Sua localização fica só neste aparelho.'))),
-      Watch.on ? h('p', { style: 'font-size:14px;color:var(--ok)' }, Watch.cell ? 'Ligado. Você está em ' + areaName(Watch.cell) + '.' : 'Ligado. Procurando sua localização…') : null));
+      h('div', { class: 'toggle' }, sw, h('div', null, h('b', null, 'Modo atenção'), h('p', { class: 'muted', style: 'font-size:14px' }, versaoApp() >= 3 ? 'Avisa na barra de notificações, mesmo com o app fechado, quando surge um alerta a até 500 m de você. O app confere sua posição a cada minuto e gasta mais bateria. Sua localização fica só neste aparelho.' : 'Com a Aurora aberta, avisa com vibração quando você entra numa área com relatos recentes, citada na pesquisa ou que você acompanha. Sua localização fica só neste aparelho.'))),
+      Watch.on ? h('p', { style: 'font-size:14px;color:var(--ok)' }, Watch.nativo ? 'Ligado. Enquanto ele estiver ativo, o Android mostra a notificação fixa "Modo atenção ligado".' : Watch.cell ? 'Ligado. Você está em ' + areaName(Watch.cell) + '.' : 'Ligado. Procurando sua localização…') : null));
   } else {
     s2.append(h('div', { class: 'note-box' }, icon('info'), h('span', null, 'Neste link de demonstração o navegador não libera sua localização. Na versão instalada (o arquivo que a equipe hospeda), a Aurora avisa com vibração quando você entra numa área com relatos recentes.')));
   }

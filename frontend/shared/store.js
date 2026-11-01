@@ -71,6 +71,7 @@ export const Store = {
       const res = await apiPost('/relatos', { tipos: r.tipos, cell: r.cell, quando: r.quando, periodo: r.periodo, texto: r.texto, origem: r.origem }, push ? { 'X-Push-Token': push } : undefined);
       const rel = res.relato;
       this.reports.set(rel.id, rel);
+      if (window.ReactNativeWebView && /^[0-9a-f]{32}$/.test(rel.id)) window.ReactNativeWebView.postMessage(JSON.stringify({ tipo: 'meu-relato', id: rel.id })); // o app não avisa quem enviou do próprio relato
       this.perfil.meus = [...this.perfil.meus, rel.id]; this.savePerfil();
       /* lê as chaves de novo e só acrescenta esta: outra aba aberta pode ter gravado as dela */
       const chaves = LS.get('chaves', {}); chaves[rel.id] = res.chave_exclusao; LS.set('chaves', chaves);

@@ -38,7 +38,8 @@ Para subir o servidor, que já serve o app em `http://localhost:8000`:
 - `--no-access-log` evita que o servidor escreva o IP de quem acessa.
 - A documentação da API fica em `http://localhost:8000/api/v1/docs`.
 
-Testes (243, incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js):
+Testes (incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js; rode com o Node 18 do sistema:
+com o Node 22 o `test_texto.py` falha, porque a tabela Unicode dele é mais nova que a do Python):
 
 ```bash
 .venv/Scripts/python -m pytest
@@ -119,8 +120,11 @@ e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`
 - **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
   `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
   10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
-- **Cuidado:** o alerta é de uma pessoa, sem verificação. Por isso o título diz "potencial", o relato aparece como não verificado e o
-  prazo ao vivo é curto. Só as roupas e os acessórios citados aparecem no alerta; nada disso vai na notificação. Definir se e como
+- **Modo atenção (app fechado):** quem liga em *Meus alertas* recebe uma notificação quando surge um alerta a até 500 m, mesmo com o app
+  fechado. O app baixa `GET /api/v1/alertas` e compara com o GPS **no próprio celular**: a localização não vai para o servidor.
+  Detalhes e ajustes de bateria (Xiaomi) em `mobile/README.md`.
+- **Cuidado:** o alerta é de uma pessoa, sem verificação. Por isso o título diz "potencial" e o relato aparece como não verificado, e o
+  alerta só vale por algumas horas (6 h no `GET /alertas`). Só as roupas e os acessórios citados aparecem no alerta; nada disso vai na notificação. Definir se e como
   o grupo verifica esses relatos é decisão pendente com o Observatório.
 
 ## Site no ar pelo GitHub Pages

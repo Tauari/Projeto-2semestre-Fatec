@@ -64,13 +64,29 @@ npx eas-cli build --platform android --profile preview
 O build roda na nuvem do Expo. No fim, ele mostra o link do **APK**: abra no celular e instale (o Android pede para permitir
 a instalação de fontes desconhecidas). Abra o app, cole o link do Aurora e aceite a permissão de notificação.
 
-## Localização (Modo atenção e "Mostrar onde estou")
+## Modo atenção: avisa com o app fechado
 
-Esses dois recursos usam o GPS. No app, o Android só libera a localização depois que **o app** a pede: a página manda uma mensagem
-(`pedir-localizacao`) e o `App.js` abre a janela de permissão do Android. Sem ela aparecia "verifique a permissão do navegador".
-Isso entrou na versão 2 do app (`window.AuroraApp.versao`); **o APK antigo precisa ser gerado de novo** (`eas build`, igual acima) e
-instalado por cima. Com o app antigo a página avisa "instale a versão nova". O GPS só funciona com o app aberto, e a localização
-fica só no aparelho.
+Em *Meus alertas → Modo atenção*, o app confere os alertas perto de você **mesmo fechado** (versão 3 do app):
+
+1. O Android mostra uma notificação fixa, **"Aurora · Modo atenção ligado"**: é o serviço que mantém o GPS funcionando.
+2. A cada ~1 minuto o app pega a posição do aparelho e baixa a lista de alertas das últimas 6 horas (`GET /api/v1/alertas`).
+3. Se algum alerta está a até **500 m** e ainda não foi avisado, aparece uma notificação: título padrão, área e a distância.
+   Tocar nela abre a área no mapa. O relato que o próprio aparelho enviou nunca avisa quem enviou.
+
+**A localização nunca vai para o servidor.** O servidor só entrega a lista de alertas, igual para todo mundo; a comparação com a sua
+posição acontece no celular (`mobile/alertas-proximos.js`).
+
+Ao ligar, o Android pede três coisas: a **localização**, depois **"Permitir o tempo todo"** (tela das configurações do Android,
+necessária para funcionar com o app fechado) e as **notificações**. Se alguma for negada, a página diz qual liberar.
+O Modo atenção gasta mais bateria que o app aberto; desligue em *Meus alertas* quando não precisar.
+
+**Celulares Xiaomi (MIUI/HyperOS) e outros com economia agressiva de bateria** costumam matar serviços em segundo plano. Em
+*Configurações → Apps → Aurora*: *Economia de bateria → Sem restrições*, *Inicialização automática* ligada, e (opcional) fixe o
+app na tela de recentes. Sem isso o aviso com o app fechado pode não chegar.
+
+Esta versão também libera a localização para o *"Mostrar onde estou"* do mapa (a página pede ao app, que pergunta ao Android).
+O **APK antigo precisa ser gerado de novo** (`eas build`, igual acima) e instalado por cima; com o antigo a página avisa
+"instale a versão nova".
 
 ## Usar
 
@@ -95,3 +111,4 @@ continuam valendo, porque ficam no servidor.
 
 - Ícone próprio da notificação (hoje usa o padrão do Android).
 - Versão para iPhone (precisa de conta Apple Developer paga).
+- Aviso instantâneo: o Modo atenção confere a cada ~1 minuto; um alerta novo pode levar até esse tempo para chegar.
