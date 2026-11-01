@@ -1,6 +1,6 @@
 import { CONFIG, janelaTxt } from '../config.js';
 import { $, h, icon, cssVar, isMobile } from '../shared/dom.js';
-import { cap } from '../shared/formato.js';
+import { cap, norm } from '../shared/formato.js';
 import { TIPOS, TIPO, PERIODOS, PER, QUANDO } from '../shared/vocabulario.js';
 import { scrub } from '../shared/anonimizacao.js';
 import { cellOf } from '../shared/grade.js';
@@ -19,9 +19,12 @@ import { pedeRota, entenderRota, geocodificar, achaLocal, semLocal } from './rot
 import { startRoute, routeClick } from '../mapa/trajeto.js';
 import { MODOS } from '../mapa/roteador.js';
 
+/* "assediada" sozinho não diz o tipo (pode ser verbal, físico, exposição...): só vira "Assédio verbal" se o texto aponta para algo falado */
+const ASSEDIO_VERBAL = /cantada|mexeu comigo|mexeram comigo|gracinha|obscen|buzin|xingou|xingaram|assobi|gritou|gritaram|falou|falaram|disse|disseram|comentario|verbal|palavr/;
+
 /* ------------------------------------------------------------------ chat da Aurora */
 export const Chat = {
-  log: null, quick: null, draft: null, step: 'inicio', busy: false, aiOn: false, lastCell: null,
+  log: null, quick: null, draft: null, step: 'inicio', busy: false, aiOn: false, lastCell: null, dicaTipo: null,
   init() {
     this.log = $('#chatLog'); this.quick = $('#chatQuick');
     const ta = $('#chatText');
@@ -76,7 +79,7 @@ export const Chat = {
   },
   askTipo() {
     this.step = 'tipo';
-    this.bot('Qual foi o tipo de situação? Pode escolher mais de uma.');
+    this.bot(this.dicaTipo || 'Qual foi o tipo de situação? Pode escolher mais de uma.'); this.dicaTipo = null;
     const sel = new Set(this.draft.tipos), grid = h('div', { class: 'qgrid' });
     const go = h('button', { type: 'button', class: 'qr primary' }, 'Continuar');
     const upd = () => { go.disabled = !sel.size; };
@@ -253,7 +256,11 @@ export const Chat = {
     else if (!res) res = heur;
     this.busy = false;
     const rel = tempoRelativo(text); if (rel) { res.quando = rel.quando; res.periodo = rel.periodo; } else if (res.fromAI) res.periodo = periodoCoerente(text, res.periodo); // "há 30 minutos": o relógio calcula, não o modelo
-    res.resposta = res.fromAI && res.tipos.length ? 'Sinto muito que isso tenha acontecido com você. Obrigada por contar.' : '';
+    /* se o único tipo achado foi assédio e nada no texto diz que foi verbal, o tipo não é chutado: a Aurora pergunta o que aconteceu */
+    let tipoAmbiguo = false;
+    if (res.tipos.includes('assedio') && !ASSEDIO_VERBAL.test(norm(text))) { res.tipos = res.tipos.filter(t => t !== 'assedio'); tipoAmbiguo = !res.tipos.length; }
+    if (tipoAmbiguo && !this.draft.tipos.length) this.dicaTipo = 'Você contou que foi assediada, mas assédio pode ser de vários tipos. O que aconteceu? Pode escolher mais de uma.';
+    res.resposta = res.fromAI && (res.tipos.length || tipoAmbiguo) ? 'Sinto muito que isso tenha acontecido com você. Obrigada por contar.' : '';
     if (res.urgente) this.emergency(true);
     const d = this.draft, got = [];
     const achou = achaLocal(text, ia || {});

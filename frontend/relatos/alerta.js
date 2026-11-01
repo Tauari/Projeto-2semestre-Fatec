@@ -1,7 +1,5 @@
 /* alerta padronizado de um relato, como o aviso do Waze ("Acidente na rodovia"): um título fixo por tipo de situação.
    Os mesmos títulos estão em backend/services/alertas.py (um teste confere que os dois batem). */
-import { CONFIG } from '../config.js';
-import { recentReports } from './relatos.js';
 
 export const ROTULOS = {
   assedio: 'Potencial assediador na área',
@@ -22,9 +20,3 @@ export const SEM_ALERTA = new Set(['ambiente']);
 
 export const tipoDoAlerta = tipos => PRIORIDADE.find(t => tipos.includes(t) && !SEM_ALERTA.has(t)) || null;
 export const tituloAlerta = tipos => { const t = tipoDoAlerta(tipos); return t ? ROTULOS[t] : null; };
-
-/* relatos que valem como alerta ao vivo: recentes (CONFIG.alertasAoVivoHoras) e de um tipo que gera alerta; o mais novo primeiro */
-export function alertasAoVivo(reps = recentReports()) {
-  const lim = Date.now() - CONFIG.alertasAoVivoHoras * 36e5;
-  return reps.filter(r => r.criado >= lim && tipoDoAlerta(r.tipos)).sort((a, b) => b.criado - a.criado);
-}

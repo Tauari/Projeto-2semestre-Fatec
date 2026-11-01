@@ -614,7 +614,3 @@ h3.gp{margin:22px 0 10px;font-size:15px;color:var(--ink-2)}
   .seg button{padding:8px 10px;font-size:14px}
   .seg .long{display:none}
 }
-
-/* alerta ao vivo no mapa: ponto pulsando na área (o relato aparece no painel da área com o título padrão) */
-.live-pin{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--rose-4);border:3px solid var(--surface);box-shadow:0 0 0 0 rgba(179,50,93,.55);animation:livepulse 1.8s infinite;cursor:pointer}
-@keyframes livepulse{70%{box-shadow:0 0 0 14px rgba(179,50,93,0)}100%{box-shadow:0 0 0 0 rgba(179,50,93,0)}}

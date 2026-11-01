@@ -24,7 +24,6 @@ import { showApoioOnMap } from './apoio/camada-apoio.js';
 import { renderApoioPage } from './apoio/pagina-apoio.js';
 import { recentReports, CELL_RE } from './relatos/relatos.js';
 import { renderAlertas } from './relatos/alertas.js';
-import { alertasAoVivo } from './relatos/alerta.js';
 import { iniciarPush } from './shared/push.js';
 import { Chat, relatar, closeChat } from './chatbot/chat.js';
 import { renderDados } from './dashboard/dados-pesquisa.js';
@@ -84,7 +83,6 @@ export function boot() {
   if (mq.addEventListener) mq.addEventListener('change', onTheme);
   new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   setInterval(() => { renderPeriodSel(); if (S.period === 'agora') { renderMap(); refreshPanel(); } }, 5 * 60e3);
-  setInterval(() => { if (alertasAoVivo().length) renderMap(); }, 60e3); // o ponto pulsando sai do mapa quando o alerta passa do prazo
 }
 /* os atalhos de teclado (Esc duas vezes = sair rápido) valem desde o início, como no legado */
 export async function iniciar() {

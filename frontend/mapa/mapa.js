@@ -18,7 +18,6 @@ import { syncControls } from './controles.js';
 import { APOIO, AP_ORDER, apSvg } from '../apoio/rede.js';
 import { APV, initApoioLayer, setApoio, renderApoio, openNearMe } from '../apoio/camada-apoio.js';
 import { recentReports, filteredReports } from '../relatos/relatos.js';
-import { alertasAoVivo, tituloAlerta } from '../relatos/alerta.js';
 import { alertCount } from '../relatos/alertas.js';
 import { Chat, relatar, openChat, closeChat } from '../chatbot/chat.js';
 
@@ -240,14 +239,6 @@ export function renderPins() {
         L.DomEvent.stopPropagation(ev);
         map.flyToBounds(L.latLngBounds(c.ids.map(cellCenter)).pad(0.5), { maxZoom: map.getMaxZoom(), duration: 0.5 });
       });
-      m.addTo(pinLayer);
-    }
-    /* alertas ao vivo: um ponto pulsando na área, com o título padrão (o relato mais novo de cada área) */
-    const vivos = new Map(); for (const r of alertasAoVivo(reps)) if (!vivos.has(r.cell)) vivos.set(r.cell, r);
-    for (const [id, r] of vivos) {
-      const ic = L.divIcon({ className: '', html: '<span class="live-pin"></span>', iconSize: [0, 0] });
-      const m = L.marker(cellCenter(id), { icon: ic, keyboard: false, riseOnHover: true, zIndexOffset: 500, title: tituloAlerta(r.tipos) + ' · ' + areaName(id) });
-      m.on('click', ev => abre(ev, id));
       m.addTo(pinLayer);
     }
     return;

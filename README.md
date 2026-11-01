@@ -113,8 +113,9 @@ e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`
   e, embaixo, só as **roupas e os acessórios** que a usuária citou: "Visto com: camiseta preta, calça roxa, boné azul"
   (`frontend/relatos/acessorios.js`). Isso sai de listas fixas de peças e cores: nome, altura, cor da pele, cabelo, tatuagem,
   idade, placa e o resto do texto nunca aparecem, mesmo que estejam no relato (o servidor ainda tira a descrição física antes de gravar).
-  O texto inteiro fica guardado e só a moderação o lê. Os relatos das últimas 6 horas (`alertasAoVivo` em `frontend/config.js`) também
-  aparecem como um ponto pulsando na área; depois disso o relato continua no mapa de calor, pela janela de 30 dias.
+  O texto inteiro fica guardado e só a moderação o lê.
+- **No chat:** se a mulher só diz "fui assediada", sem apontar que foi algo falado, a Aurora não chuta "Assédio verbal": pergunta o que aconteceu
+  (assédio pode ser verbal, uma abordagem, exposição, violência física...).
 - **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
   `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
   10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
