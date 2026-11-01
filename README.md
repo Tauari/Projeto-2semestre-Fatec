@@ -110,14 +110,16 @@ e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`
 "Rua escura ou deserta" é condição do lugar, não um acontecimento: não vira alerta.
 
 - **No mapa:** cada relato aparece no painel da área (e em "Meus alertas") com o título padrão do tipo, por exemplo "Potencial assediador na área",
-  no lugar do texto que a usuária escreveu. O texto fica guardado e só a moderação o lê. Os relatos das últimas 6 horas
-  (`alertasAoVivoHoras` em `frontend/config.js`) também aparecem como um ponto pulsando na área; depois disso o relato continua no mapa de
-  calor, pela janela de 30 dias.
+  e, embaixo, só as **roupas e os acessórios** que a usuária citou: "Visto com: camiseta preta, calça roxa, boné azul"
+  (`frontend/relatos/acessorios.js`). Isso sai de listas fixas de peças e cores: nome, altura, cor da pele, cabelo, tatuagem,
+  idade, placa e o resto do texto nunca aparecem, mesmo que estejam no relato (o servidor ainda tira a descrição física antes de gravar).
+  O texto inteiro fica guardado e só a moderação o lê. Os relatos das últimas 6 horas (`alertasAoVivo` em `frontend/config.js`) também
+  aparecem como um ponto pulsando na área; depois disso o relato continua no mapa de calor, pela janela de 30 dias.
 - **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
   `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
   10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
 - **Cuidado:** o alerta é de uma pessoa, sem verificação. Por isso o título diz "potencial", o relato aparece como não verificado e o
-  prazo ao vivo é curto. O que a usuária escreve (roupa, por exemplo) não aparece para o público, nem na notificação. Definir se e como
+  prazo ao vivo é curto. Só as roupas e os acessórios citados aparecem no alerta; nada disso vai na notificação. Definir se e como
   o grupo verifica esses relatos é decisão pendente com o Observatório.
 
 ## Site no ar pelo GitHub Pages

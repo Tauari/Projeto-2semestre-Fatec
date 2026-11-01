@@ -176,7 +176,7 @@ export const Chat = {
       return;
     }
     this.bot([h('span', null, 'Quer contar algo que ajude outras mulheres? É opcional.'),
-      h('span', { class: 'note', text: 'Escreva abaixo. Evite nomes, telefones, placas e endereço exato: eu tiro o que escapar antes de publicar.' })]);
+      h('span', { class: 'note', text: 'Escreva abaixo. Evite nomes, telefones, placas e endereço exato: eu tiro o que escapar antes de publicar. No mapa aparecem só as roupas e os acessórios que você citar (por exemplo, "camiseta preta e boné azul"), nunca o resto do texto.' })]);
     this.options([{ label: 'Pular esta parte', quiet: true, go: () => { d.detalhesAsked = true; this.me('Pular'); this.next(); } }]);
     if (!isMobile()) $('#chatText').focus();
   },
