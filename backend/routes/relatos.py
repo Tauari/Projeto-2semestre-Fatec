@@ -12,7 +12,7 @@ import logging
 import secrets
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Query, Response
 from sqlalchemy.orm import Session
 
 from backend.config import Configuracoes, obter_configuracoes
@@ -30,6 +30,7 @@ from backend.models.relatos import ListaRelatos, RelatoEntrada, RelatoPublico, R
 from backend.models.vocabulario import TipoEvidencia
 from backend.services.enderecos import anonimizar_completo
 from backend.services.ia import ContextoIA, obter_provedor
+from backend.services.push import notificar_relato
 from backend.services.retencao import aplicar_retencao, limite_retencao_ms
 from backend.services.texto import fatiar_js
 
@@ -91,7 +92,9 @@ def obter(relato_id: str, sessao: Session = Depends(obter_sessao), cfg: Configur
 
 
 @router.post('/relatos', status_code=201, response_model=RespostaRelatoCriado, responses={422: {'model': ErroValidacao}})
-def criar(entrada: RelatoEntrada, sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends(obter_configuracoes)):
+def criar(entrada: RelatoEntrada, tarefas: BackgroundTasks, sessao: Session = Depends(obter_sessao),
+          cfg: Configuracoes = Depends(obter_configuracoes),
+          token_push: str | None = Header(None, alias='X-Push-Token')):
     aplicar_retencao(sessao)  # com prazo configurado, apaga o que venceu (também sem reiniciar o servidor)
     limpo = anonimizar_completo(entrada.texto)
     texto = texto_bem_formado(fatiar_js(limpo.texto, cfg.relatos_texto_max))
@@ -104,6 +107,8 @@ def criar(entrada: RelatoEntrada, sessao: Session = Depends(obter_sessao), cfg: 
     publico = relato_publico(relato)
     if limpo.texto and cfg.ia_classificar_ao_criar:
         _classificar(sessao, relato, limpo.texto, cfg)
+    # o token só serve para não avisar o aparelho de quem enviou: não é guardado junto do relato
+    tarefas.add_task(notificar_relato, relato.id, token_push)
     return {'relato': publico, 'chave_exclusao': chave, 'anonimizacao': {'removidos': limpo.removidos}}
 
 

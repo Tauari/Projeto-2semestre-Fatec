@@ -61,6 +61,20 @@ class Classificacao(Base):
     criado: Mapped[int] = mapped_column(BigInteger)  # o mesmo do relato, para não revelar a hora exata
 
 
+class DispositivoPush(Base):
+    """Aparelho que pediu notificação no celular (token do Expo Push) e as áreas que a pessoa acompanha.
+
+    Guarda só o token e as células (de ~150 m ou ~1 km): sem nome, e-mail, IP nem ligação com os relatos que
+    a pessoa enviou. ``ultimo_envio`` limita a frequência das notificações.
+    """
+    __tablename__ = 'dispositivos_push'
+
+    token: Mapped[str] = mapped_column(String(200), primary_key=True)
+    areas: Mapped[list[str]] = mapped_column(JSON)
+    criado_em: Mapped[int] = mapped_column(BigInteger)
+    ultimo_envio: Mapped[int] = mapped_column(BigInteger, default=0)
+
+
 class ConjuntoReferencia(Base):
     """Dados de referência: a geografia do mapa (``tipo='geografia'``) e a rede de apoio (``tipo='rede_apoio'``)."""
     __tablename__ = 'conjuntos_referencia'

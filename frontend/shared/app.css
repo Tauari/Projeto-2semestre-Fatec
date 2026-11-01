@@ -612,3 +612,21 @@ h3.gp{margin:22px 0 10px;font-size:15px;color:var(--ink-2)}
   .seg button{padding:8px 10px;font-size:14px}
   .seg .long{display:none}
 }
+
+/* alertas ao vivo no mapa (como os avisos do Waze): título padrão por tipo, onde e há quanto tempo */
+.live{display:flex;flex-direction:column;gap:8px;padding:2px 18px 14px}
+.live[hidden]{display:none}
+.live-label{margin:0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--rose-4)}
+.live-card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c,var(--rose-3));border-radius:12px;overflow:hidden}
+.live-head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;cursor:pointer}
+.live-head:focus-visible{outline:2.5px solid var(--brand);outline-offset:-2px}
+.live-ico{flex:none;width:12px;height:12px;border-radius:50%;background:var(--c,var(--rose-3));animation:livepulse 1.8s infinite}
+.live-txt{display:flex;flex-direction:column;min-width:0}
+.live-txt b{font-size:15px;line-height:1.3;color:var(--ink)}
+.live-txt small{color:var(--ink-3);font-size:13px}
+.live-detail{padding:0 14px 12px 38px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.live-detail .txt,.live-detail .meta{margin:0}
+.live-detail .meta{color:var(--ink-3);font-size:13px}
+.live-more{align-self:flex-start;font-size:14px;font-weight:600}
+.live-pin{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--rose-4);border:3px solid var(--surface);box-shadow:0 0 0 0 rgba(179,50,93,.55);animation:livepulse 1.8s infinite;cursor:pointer}
+@keyframes livepulse{70%{box-shadow:0 0 0 14px rgba(179,50,93,0)}100%{box-shadow:0 0 0 0 rgba(179,50,93,0)}}

@@ -1,7 +1,7 @@
 import { janelaTxt, margemCriadoMs } from '../config.js';
 import { $, h, icon, toast } from '../shared/dom.js';
 import { DAY, plural } from '../shared/formato.js';
-import { STANDALONE } from '../shared/ambiente.js';
+import { STANDALONE, noApp } from '../shared/ambiente.js';
 import { D } from '../shared/dados.js';
 import { dentro, grossa } from '../shared/grade.js';
 import { areaName } from '../shared/bairros.js';
@@ -16,7 +16,8 @@ export function toggleFollow(id, force) {
   const a = new Set(Store.perfil.areas), on = force != null ? force : !a.has(id);
   if (on) a.add(id); else a.delete(id);
   Store.perfil.areas = [...a]; Store.savePerfil(); Store.emit();
-  toast(on ? 'Você está acompanhando ' + areaName(id) + '. As novidades aparecem em Meus alertas.' : 'Você parou de acompanhar esta área.');
+  toast(on ? 'Você está acompanhando ' + areaName(id) + (noApp() ? '. Quando alguém relatar algo nela, você recebe uma notificação no celular.' : '. As novidades aparecem em Meus alertas.')
+    : 'Você parou de acompanhar esta área.');
 }
 
 /* novo desde a última visita. Com a hora de envio arredondada no servidor (ou com o relógio do aparelho diferente),

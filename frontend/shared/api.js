@@ -19,5 +19,5 @@ async function pedir(method, path, body, headers) {
   try { return await res.json(); } catch (e) { throw new ApiErro('Resposta do servidor em formato inesperado.', res.status, 'server'); }
 }
 export const apiGet = path => pedir('GET', path);
-export const apiPost = (path, body) => pedir('POST', path, body);
+export const apiPost = (path, body, headers) => pedir('POST', path, body, headers);
 export const apiDelete = (path, headers) => pedir('DELETE', path, undefined, headers);

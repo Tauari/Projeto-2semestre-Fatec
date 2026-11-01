@@ -3,6 +3,7 @@ const meta = document.querySelector('meta[name="aurora-api"]');
 export const CONFIG = {
   apiBase: (meta && meta.content) || '/api/v1',
   janelaDias: 30,                 // relatos visíveis no mapa (vem de /config quando há servidor)
+  alertasAoVivoHoras: 6,          // por quanto tempo um relato aparece como "alerta ao vivo" no mapa
   hexRelatosM: 150,               // raio do hexágono dos relatos, em metros
   tiposMax: 4,                    // tipos por relato
   textoMax: 300,                  // caracteres da descrição publicada

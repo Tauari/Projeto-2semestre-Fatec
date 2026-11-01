@@ -48,6 +48,11 @@ class Configuracoes(BaseSettings):
     groq_api_key: SecretStr | None = None
     groq_modelo: str = 'openai/gpt-oss-120b'
     groq_url: str = 'https://api.groq.com/openai/v1'
+    # notificação no celular (Expo Push): quem acompanha uma área recebe o alerta de um relato novo nela
+    push_ativo: bool = True
+    push_url: str = 'https://exp.host/--/api/v2/push/send'
+    push_intervalo_min: int = Field(10, ge=0)  # no máximo uma notificação por aparelho a cada tanto tempo
+    push_timeout_s: float = Field(10.0, gt=0)
 
 
 @lru_cache

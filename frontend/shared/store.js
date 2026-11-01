@@ -5,6 +5,7 @@ import { LS } from './armazenamento-local.js';
 import { MODO_DADOS } from './dados.js';
 import { ApiErro, apiGet, apiPost, apiDelete } from './api.js';
 import { toast } from './dom.js';
+import { tokenPush } from './ambiente.js';
 
 export const Store = {
   mode: 'local', ready: false, uid: null, canWrite: true, canEdit: false, papeis: [],
@@ -66,7 +67,8 @@ export const Store = {
   },
   async addReport(r) {
     if (this.mode === 'api') {
-      const res = await apiPost('/relatos', { tipos: r.tipos, cell: r.cell, quando: r.quando, periodo: r.periodo, texto: r.texto, origem: r.origem });
+      const push = tokenPush(); // só para o servidor não avisar este aparelho do relato que ele mesmo enviou
+      const res = await apiPost('/relatos', { tipos: r.tipos, cell: r.cell, quando: r.quando, periodo: r.periodo, texto: r.texto, origem: r.origem }, push ? { 'X-Push-Token': push } : undefined);
       const rel = res.relato;
       this.reports.set(rel.id, rel);
       this.perfil.meus = [...this.perfil.meus, rel.id]; this.savePerfil();
