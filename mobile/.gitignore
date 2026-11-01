@@ -1,0 +1,9 @@
+node_modules/
+.expo/
+dist/
+web-build/
+# chave do Firebase (notificações): vai para o EAS como variável de arquivo, nunca para o git
+google-services.json
+*.jks
+*.keystore
+.env

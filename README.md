@@ -15,6 +15,7 @@ O projeto está migrando de um arquivo HTML único para um app com servidor (Fas
 | `index.html` | **Versão original**, que o GitHub Pages publica. É uma cópia de `dist/aurora.html`. |
 | `src/` | Código-fonte da versão original: `app.html`, `app.css`, `app.js`. Não editar durante a migração: é a referência. |
 | `vendor/` | Leaflet (biblioteca do mapa) e sua licença. |
+| `mobile/` | App Android (Expo) que abre o Aurora e liga as notificações no celular. Veja `mobile/README.md`. |
 
 ## Como rodar a nova versão
 
@@ -100,6 +101,23 @@ Como cada ponto foi posicionado:
 Casas-abrigo nunca aparecem, para proteger quem está nelas. O encaminhamento para acolhimento seguro é feito pela rede, por exemplo pelo CREAS.
 
 Atenção a uma mudança recente: o CREAS saiu da Rua 1, 1809 em junho de 2024 e hoje atende na Rua 6, 640. O endereço antigo agora é do Conselho Tutelar, e algumas listas oficiais ainda mostram o endereço velho.
+
+## Alertas ao vivo e notificações
+
+Como os avisos do Waze, cada relato vira um **alerta com título padrão**, escolhido pelo tipo (o mais grave, se houver mais de um):
+assédio verbal = "Potencial assediador na área", perseguição = "Possível perseguidor na área", roubo ou furto = "Roubo ou furto na área",
+e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`, com um teste que confere que os dois batem).
+"Rua escura ou deserta" é condição do lugar, não um acontecimento: não vira alerta.
+
+- **No mapa:** os alertas das últimas 6 horas (`alertasAoVivoHoras` em `frontend/config.js`) aparecem na lista "Alertas ao vivo", com a
+  área e há quanto tempo, e como um ponto pulsando na área. Ao tocar, aparece a descrição que a usuária deixou, já sem dados pessoais,
+  marcada como "não verificado". Depois das 6 horas o relato continua no mapa de calor, pela janela de 30 dias.
+- **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
+  `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
+  10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
+- **Cuidado:** o alerta é de uma pessoa, sem verificação. A descrição (roupa, por exemplo) pode apontar a pessoa errada, por isso o
+  título diz "potencial", o relato aparece como não verificado e o prazo ao vivo é curto. Definir se e como o grupo verifica
+  esses relatos é decisão pendente com o Observatório.
 
 ## Site no ar pelo GitHub Pages
 
