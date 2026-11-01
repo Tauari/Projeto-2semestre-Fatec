@@ -1,5 +1,6 @@
 """Rotas da API. O ``main.py`` inclui todas com o prefixo ``/api/v1``."""
 from backend.routes import (
+    alertas,
     analise,
     apoio,
     dados_oficiais,
@@ -15,6 +16,6 @@ from backend.routes import (
 )
 
 ROTAS = (sistema.router, mapa.router, relatos.router, dados_oficiais.router, dados_percepcao.router, dashboard.router,
-         ia.router, moderacao.router, apoio.router, usuarios.router, analise.router, push.router)
+         ia.router, moderacao.router, apoio.router, usuarios.router, analise.router, push.router, alertas.router)
 
 __all__ = ['ROTAS']
