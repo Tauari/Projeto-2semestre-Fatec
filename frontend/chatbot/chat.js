@@ -269,6 +269,13 @@ export const Chat = {
     if (res.fromAI) d.origem = 'chat-ia';
     if (achou.cand && !d.cell) { d.sug = { ...achou.cand, cell: cellOf(achou.cand.lat, achou.cand.lng, true) }; got.push('local: ' + achou.cand.nome); }
     else if (res.bairro && !d.cell) { d.sug = { cell: cellOf(res.bairro.lat, res.bairro.lng, true), nome: res.bairro.nome, lat: res.bairro.lat, lng: res.bairro.lng, como: 'bairro' }; got.push('perto de ' + res.bairro.nome); }
+    /* no começo da conversa, se a IA leu e não achou situação, tipo, quando nem lugar (um "oi", por exemplo), a Aurora conversa
+       e mostra o menu em vez de abrir as perguntas do relato. No meio de um relato, o fluxo segue como antes. */
+    if (res.fromAI && !res.urgente && !got.length && !desc && (this.step === 'inicio' || this.step === 'fim')) {
+      this.bot('Oi! Eu sou a Aurora. Se quiser registrar uma situação, me conte o que aconteceu com suas palavras ou escolha uma opção abaixo.');
+      this.menuInicial();
+      return;
+    }
     if (res.resposta) this.bot(res.resposta);
     if (got.length) this.bot('Anotei: ' + got.join(' · ') + '. Agora faltam alguns detalhes.');
     else if (!res.resposta) this.bot('Obrigada por contar. Vou te fazer perguntas rápidas para organizar o relato.');
