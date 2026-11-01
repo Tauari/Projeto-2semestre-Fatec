@@ -6,6 +6,8 @@ __pycache__/
 dist/aurora-link.html
 # ambiente e banco local (o banco guarda relatos: não versionar)
 .venv/
+# chaves de API e ajustes locais (veja .env.example)
+.env
 .pytest_cache/
 backend/database/*.db
 backend/database/*.db-journal

@@ -35,6 +35,17 @@ class ProvedorOllama(ProvedorIA):
         self._url = cfg.ia_ollama_url.rstrip('/')
         self._timeout = cfg.ia_timeout_s
 
+    def _gerar(self, prompt: str, *, json_saida: bool, temperatura: float) -> str:
+        """Manda o prompt ao modelo e devolve o texto da resposta. Falha com httpx.HTTPError, ValueError ou KeyError."""
+        corpo = {'model': self.modelo, 'prompt': prompt, 'stream': False,
+                 'keep_alive': '30m',  # senão o Ollama descarrega o modelo após 5 min parado e o próximo uso demora
+                 'options': {'temperature': temperatura}}
+        if json_saida:
+            corpo['format'] = 'json'
+        r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json=corpo)
+        r.raise_for_status()
+        return str(r.json()['response'])
+
     def analisar_padroes(self, resumo: dict) -> tuple[str, bool]:
         """O modelo recebe só os achados já detectados (números e frases), nunca o texto de relatos, e só escreve o resumo.
         O texto dele é recusado se prometer futuro ou usar número que não está nos achados: aí vale o resumo por regras."""
@@ -53,12 +64,9 @@ class ProvedorOllama(ProvedorIA):
                   'Fale do passado ("nos dados", "foram registrados"); nunca diga que algo vai acontecer, nem "certamente". Lembre que relatos mostram '
                   'concentração de relatos, não risco. Se houver dados insuficientes, diga isso.\n\nAchados:\n' + achados + '\n\nDados insuficientes:\n' + faltas + '\n\nResumo:')
         try:
-            r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
-                'model': self.modelo, 'prompt': prompt, 'stream': False, 'keep_alive': '30m', 'options': {'temperature': 0.2}})
-            r.raise_for_status()
-            texto = str(r.json()['response']).strip()
+            texto = self._gerar(prompt, json_saida=False, temperatura=0.2).strip()
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            log.warning('ollama indisponível ou resposta inválida (%s): resumo por regras', type(e).__name__)
+            log.warning('%s indisponível ou resposta inválida (%s): resumo por regras', self.nome, type(e).__name__)
             return base, False
         if not resumo_valido(texto, resumo):
             log.warning('resumo do modelo recusado (futuro ou número fora dos achados): resumo por regras')
@@ -72,12 +80,9 @@ class ProvedorOllama(ProvedorIA):
                   'modo: "pe" (a pé), "bike" (bicicleta) ou "carro" (carro ou moto); null se não disser.\n'
                   'Responda só com JSON: {"origem":null,"destino":null,"modo":null}\n\nMensagem: ' + (texto or '')[:300].replace('"', "'"))
         try:
-            r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
-                'model': self.modelo, 'prompt': prompt, 'format': 'json', 'stream': False, 'keep_alive': '30m', 'options': {'temperature': 0}})
-            r.raise_for_status()
-            o = json.loads(r.json()['response'])
+            o = json.loads(self._gerar(prompt, json_saida=True, temperatura=0))
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            log.warning('ollama indisponível ou resposta inválida (%s): sem rota', type(e).__name__)
+            log.warning('%s indisponível ou resposta inválida (%s): sem rota', self.nome, type(e).__name__)
             o = {}
         nome = lambda v: v.strip()[:80] if isinstance(v, str) and v.strip() else None  # noqa: E731
         o = o if isinstance(o, dict) else {}
@@ -98,12 +103,9 @@ class ProvedorOllama(ProvedorIA):
                   'Resposta: {"ruas":["Rua 7","Avenida 29"],"pontos":["Shopping"],"referencia":"Rua 7 esquina com a Avenida 29, perto do Shopping","sensiveis":["nome"],"descricao":"Fui seguida por um homem de boina verde."}\n\n'
                   'Responda só com JSON: {"ruas":[],"pontos":[],"referencia":null,"sensiveis":[],"descricao":""}\n\nMensagem: "' + seguro.texto[:1000].replace('"', "'") + '"')
         try:
-            r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
-                'model': self.modelo, 'prompt': prompt, 'format': 'json', 'stream': False, 'keep_alive': '30m', 'options': {'temperature': 0}})
-            r.raise_for_status()
-            o = json.loads(r.json()['response'])
+            o = json.loads(self._gerar(prompt, json_saida=True, temperatura=0))
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            log.warning('ollama indisponível ou resposta inválida (%s): sem local', type(e).__name__)
+            log.warning('%s indisponível ou resposta inválida (%s): sem local', self.nome, type(e).__name__)
             o = {}
         o = o if isinstance(o, dict) else {}
 
@@ -121,14 +123,9 @@ class ProvedorOllama(ProvedorIA):
         seguro = anonimizar_completo(texto)
         prompt = montar_prompt_extracao(seguro.texto, [b.nome for b in contexto.bairros])
         try:
-            r = httpx.post(self._url + '/api/generate', timeout=self._timeout, json={
-                'model': self.modelo, 'prompt': prompt, 'format': 'json', 'stream': False,
-                'keep_alive': '30m',  # senão o Ollama descarrega o modelo após 5 min parado e o próximo uso demora
-                'options': {'temperature': 0.1}})
-            r.raise_for_status()
-            res = validar_saida_extracao(json.loads(r.json()['response']), contexto.bairros)
+            res = validar_saida_extracao(json.loads(self._gerar(prompt, json_saida=True, temperatura=0.1)), contexto.bairros)
         except (httpx.HTTPError, ValueError, KeyError) as e:
-            log.warning('ollama indisponível ou resposta inválida (%s): usando a heurística', type(e).__name__)
+            log.warning('%s indisponível ou resposta inválida (%s): usando a heurística', self.nome, type(e).__name__)
             res = None
         heur = ProvedorHeuristico().extrair(texto, contexto)
         if res is None:
