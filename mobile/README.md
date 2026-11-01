@@ -21,12 +21,22 @@ O servidor guarda só o token e as áreas (sem nome, e-mail, IP nem ligação co
 Você precisa de **Node 22 ou mais novo** (`node --version`) e de uma conta grátis em [expo.dev](https://expo.dev). O Expo SDK 58
 e o `eas-cli` não rodam no Node 18 que vem em algumas distribuições Linux.
 
+Neste computador o Node 22 está em `~/.local/node` e não entra sozinho no `PATH`. Em cada terminal novo, antes dos comandos:
+
+```bash
+export PATH=$HOME/.local/node/bin:$PATH
+```
+
 ```bash
 cd mobile
 npm install
 npx eas-cli login
 npx eas-cli init
 ```
+
+As dependências já foram instaladas e conferidas aqui (`npx expo-doctor`: 20 de 20 verificações; `npx expo export --platform android`:
+o JavaScript compila; `npx expo prebuild`: o projeto Android é gerado com as notificações e o plugin do Firebase). O que ainda não foi
+feito é o `eas build` e o teste num celular de verdade.
 
 O `eas init` cria o projeto na sua conta e grava o `projectId` no `app.json` (sem ele o app não consegue pegar o token).
 Se ele pedir para adicionar o `projectId` à mão, coloque em `app.json`, em `expo.extra.eas.projectId`.

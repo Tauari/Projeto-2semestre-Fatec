@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
     "backgroundColor": "#2A2037",
     "android": {
       "package": "br.fatec.aurora",

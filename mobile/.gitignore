@@ -7,3 +7,6 @@ google-services.json
 *.jks
 *.keystore
 .env
+# pastas nativas geradas por "expo prebuild" (o EAS gera as dele na nuvem)
+android/
+ios/
