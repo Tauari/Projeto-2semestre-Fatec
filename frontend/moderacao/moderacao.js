@@ -20,7 +20,7 @@ export function renderMod() {
     const status = ver ? 'Verificado' : oc ? 'Oculto pela equipe' : v.f >= 3 ? 'Fora do mapa: ' + v.f + ' sinalizações' : 'Visível';
     const left = h('div', { style: 'display:grid;gap:6px' }, h('b', { text: areaName(r.cell) }),
       h('span', { class: 'muted', style: 'font-size:13px' }, status + ' · ' + v.c + ' ainda acontece · ' + v.p + ' parou · ' + v.f + ' falso'),
-      reportItem(r, { votes: false, tag: 'div' }));
+      reportItem(r, { votes: false, tag: 'div', texto: true }));
     const act = (label, fn) => h('button', { class: 'btn sm', type: 'button', onclick: async () => { try { await fn(); toast('Moderação salva.'); } catch (e) { toast('Não foi possível salvar. Só quem pode editar o protótipo modera.'); } } }, label);
     list.append(h('div', { class: 'card modrow' }, left, h('div', { class: 'acts' },
       oc ? act('Mostrar', () => Store.setMod(r.id, 'oculto', false)) : act('Ocultar', () => Store.setMod(r.id, 'oculto', true)),

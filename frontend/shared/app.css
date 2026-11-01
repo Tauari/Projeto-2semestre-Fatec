@@ -331,6 +331,7 @@ p{margin:0}
 .tipo{background:var(--amb-1);color:var(--amb-4);border-radius:6px;padding:2px 8px;font-size:12.5px;font-weight:700}
 .rep .meta{font-size:13px;color:var(--ink-3);display:flex;gap:6px;flex-wrap:wrap}
 .rep .txt{font-size:14.5px;color:var(--ink);overflow-wrap:anywhere}
+.rep .txt.alerta{font-weight:700;font-size:15.5px}
 .rep .flags{display:flex;gap:6px;flex-wrap:wrap}
 .badge-ok{display:inline-flex;gap:4px;align-items:center;font-size:12px;color:var(--ok);background:var(--ok-soft);border-radius:6px;padding:2px 7px;font-weight:700}
 .badge-soft{display:inline-flex;gap:4px;align-items:center;font-size:12px;color:var(--ink-3);background:var(--surface-2);border-radius:6px;padding:2px 7px}
@@ -613,20 +614,6 @@ h3.gp{margin:22px 0 10px;font-size:15px;color:var(--ink-2)}
   .seg .long{display:none}
 }
 
-/* alertas ao vivo no mapa (como os avisos do Waze): título padrão por tipo, onde e há quanto tempo */
-.live{display:flex;flex-direction:column;gap:8px;padding:2px 18px 14px}
-.live[hidden]{display:none}
-.live-label{margin:0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--rose-4)}
-.live-card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--c,var(--rose-3));border-radius:12px;overflow:hidden}
-.live-head{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:11px 14px;cursor:pointer}
-.live-head:focus-visible{outline:2.5px solid var(--brand);outline-offset:-2px}
-.live-ico{flex:none;width:12px;height:12px;border-radius:50%;background:var(--c,var(--rose-3));animation:livepulse 1.8s infinite}
-.live-txt{display:flex;flex-direction:column;min-width:0}
-.live-txt b{font-size:15px;line-height:1.3;color:var(--ink)}
-.live-txt small{color:var(--ink-3);font-size:13px}
-.live-detail{padding:0 14px 12px 38px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
-.live-detail .txt,.live-detail .meta{margin:0}
-.live-detail .meta{color:var(--ink-3);font-size:13px}
-.live-more{align-self:flex-start;font-size:14px;font-weight:600}
+/* alerta ao vivo no mapa: ponto pulsando na área (o relato aparece no painel da área com o título padrão) */
 .live-pin{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--rose-4);border:3px solid var(--surface);box-shadow:0 0 0 0 rgba(179,50,93,.55);animation:livepulse 1.8s infinite;cursor:pointer}
 @keyframes livepulse{70%{box-shadow:0 0 0 14px rgba(179,50,93,0)}100%{box-shadow:0 0 0 0 rgba(179,50,93,0)}}

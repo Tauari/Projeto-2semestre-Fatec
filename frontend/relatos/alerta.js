@@ -28,7 +28,3 @@ export function alertasAoVivo(reps = recentReports()) {
   const lim = Date.now() - CONFIG.alertasAoVivoHoras * 36e5;
   return reps.filter(r => r.criado >= lim && tipoDoAlerta(r.tipos)).sort((a, b) => b.criado - a.criado);
 }
-export function haQuanto(ts) {
-  const min = Math.max(0, Math.floor((Date.now() - ts) / 6e4));
-  return min < 1 ? 'agora' : min < 60 ? 'há ' + min + ' min' : 'há ' + Math.floor(min / 60) + ' h';
-}
