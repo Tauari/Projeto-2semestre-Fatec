@@ -64,6 +64,14 @@ npx eas-cli build --platform android --profile preview
 O build roda na nuvem do Expo. No fim, ele mostra o link do **APK**: abra no celular e instale (o Android pede para permitir
 a instalação de fontes desconhecidas). Abra o app, cole o link do Aurora e aceite a permissão de notificação.
 
+## Localização (Modo atenção e "Mostrar onde estou")
+
+Esses dois recursos usam o GPS. No app, o Android só libera a localização depois que **o app** a pede: a página manda uma mensagem
+(`pedir-localizacao`) e o `App.js` abre a janela de permissão do Android. Sem ela aparecia "verifique a permissão do navegador".
+Isso entrou na versão 2 do app (`window.AuroraApp.versao`); **o APK antigo precisa ser gerado de novo** (`eas build`, igual acima) e
+instalado por cima. Com o app antigo a página avisa "instale a versão nova". O GPS só funciona com o app aberto, e a localização
+fica só no aparelho.
+
 ## Usar
 
 1. No mapa, toque numa área (a da sua casa, do trabalho, da faculdade) e escolha **Acompanhar**.
@@ -85,6 +93,5 @@ continuam valendo, porque ficam no servidor.
 
 ## Ainda não tem
 
-- Localização do celular dentro do app (o botão "Mostrar onde estou" do mapa). Precisa de `expo-location` e da permissão de GPS.
 - Ícone próprio da notificação (hoje usa o padrão do Android).
 - Versão para iPhone (precisa de conta Apple Developer paga).

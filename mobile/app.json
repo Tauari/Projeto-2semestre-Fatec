@@ -12,7 +12,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2A2037"
       },
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
     },
     "plugins": [
       [

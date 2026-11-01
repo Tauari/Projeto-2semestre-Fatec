@@ -4,7 +4,7 @@
 // A página (frontend/shared/push.js) manda o token e as áreas acompanhadas para o servidor, que avisa quando um relato
 // novo cai numa delas. Tocar numa notificação abre a área do alerta (evento "aurora-abrir-area").
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, BackHandler, Linking, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, BackHandler, Linking, PermissionsAndroid, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
@@ -51,6 +51,25 @@ async function registrarPush() {
   return (await Notifications.getExpoPushTokenAsync({ projectId })).data;
 }
 
+const LOCALIZACAO = [PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION, PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION];
+
+/** A localização já está liberada para o app? (a página só usa o GPS depois disso) */
+async function localizacaoLiberada() {
+  if (Platform.OS !== 'android') return true;
+  const r = await Promise.all(LOCALIZACAO.map(p => PermissionsAndroid.check(p)));
+  return r.some(Boolean);
+}
+
+/** Pede ao Android a localização (só quando a página pede: Modo atenção, "Mostrar onde estou"). Devolve se foi liberada. */
+async function pedirLocalizacao() {
+  if (Platform.OS !== 'android') return true;
+  if (await localizacaoLiberada()) return true;
+  const r = await PermissionsAndroid.requestMultiple(LOCALIZACAO);
+  const ok = LOCALIZACAO.some(p => r[p] === PermissionsAndroid.RESULTS.GRANTED);
+  if (!ok && LOCALIZACAO.every(p => r[p] === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN)) Linking.openSettings().catch(() => {}); // o Android não pergunta mais
+  return ok;
+}
+
 function Tela({ children }) {
   return <View style={estilo.tela}>{children}</View>;
 }
@@ -93,6 +112,7 @@ export default function App() {
   const [token, setToken] = useState(null);
   const [area, setArea] = useState(null);
   const [aviso, setAviso] = useState(null);
+  const [localizacao, setLocalizacao] = useState(false);
   const [pronto, setPronto] = useState(false);
   const [editando, setEditando] = useState(false);
   const [falha, setFalha] = useState(null);
@@ -113,6 +133,7 @@ export default function App() {
         const cel = resp && resp.actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER ? resp.notification.request.content.data?.cell : null;
         if (typeof cel === 'string' && CELULA.test(cel)) setArea(cel);
         if (resp) Notifications.clearLastNotificationResponse();
+        localizacaoLiberada().then(ok => { if (vivo) setLocalizacao(ok); }, () => {});
         const t = await registrarPush();
         if (vivo) setToken(t);
       } catch (e) {
@@ -181,7 +202,7 @@ export default function App() {
     );
   }
 
-  const antes = `window.AuroraApp = ${JSON.stringify({ plataforma: 'expo', pushToken: token, areaInicial: area })}; true;`;
+  const antes = `window.AuroraApp = ${JSON.stringify({ plataforma: 'expo', versao: 2, pushToken: token, areaInicial: area, localizacao })}; true;`;
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
@@ -193,6 +214,15 @@ export default function App() {
           injectedJavaScriptBeforeContentLoaded={antes}
           javaScriptEnabled
           domStorageEnabled
+          geolocationEnabled
+          onMessage={async e => {
+            // a página pede a localização quando a pessoa liga o Modo atenção ou toca em "Mostrar onde estou"
+            let msg;
+            try { msg = JSON.parse(e.nativeEvent.data); } catch { return; }
+            if (!msg || msg.tipo !== 'pedir-localizacao') return;
+            const ok = await pedirLocalizacao();
+            web.current?.injectJavaScript(`window.AuroraApp.localizacao = ${ok}; window.dispatchEvent(new CustomEvent('aurora-localizacao', { detail: { ok: ${ok} } })); true;`);
+          }}
           setSupportMultipleWindows={false}
           allowsBackForwardNavigationGestures
           startInLoadingState

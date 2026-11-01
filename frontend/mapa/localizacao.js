@@ -4,6 +4,7 @@ import { D } from '../shared/dados.js';
 import { cellOf, grossa } from '../shared/grade.js';
 import { areaName } from '../shared/bairros.js';
 import { S } from '../shared/estado.js';
+import { liberarLocalizacao, erroLocalizacao } from '../shared/ambiente.js';
 import { Store } from '../shared/store.js';
 import { map } from './mapa.js';
 import { fmtDist, nearestApoio } from '../apoio/rede.js';
@@ -20,10 +21,11 @@ export function showMe(ll) {
 /* ------------------------------------------------------------------ modo atenção (GPS, só na versão arquivo) */
 export const Watch = {
   id: null, on: false, cell: null, last: {},
-  start() {
+  async start() {
     if (!('geolocation' in navigator)) return;
-    this.on = true; this.cell = null;
-    this.id = navigator.geolocation.watchPosition(p => this.onPos(p), () => { toast('Não consegui acessar sua localização. Verifique a permissão do navegador.'); this.stop(); renderAlertas(false); },
+    if (!(await liberarLocalizacao())) { toast(erroLocalizacao(), 6000); renderAlertas(false); return; } // no app, pede a permissão ao Android
+    this.on = true; this.cell = null; renderAlertas(false);
+    this.id = navigator.geolocation.watchPosition(p => this.onPos(p), () => { toast(erroLocalizacao(), 6000); this.stop(); renderAlertas(false); },
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
     try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { /* opcional */ }
     toast('Modo atenção ligado.');
