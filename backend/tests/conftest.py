@@ -19,10 +19,11 @@ API = '/api/v1'
 
 @pytest.fixture(autouse=True)
 def _ambiente_isolado(monkeypatch):
-    """Nenhuma variável ``AURORA_*`` de quem roda os testes vaza para eles."""
+    """Nenhuma variável ``AURORA_*`` (nem o ``.env``) de quem roda os testes vaza para eles."""
     for nome in list(os.environ):
         if nome.upper().startswith('AURORA_'):
             monkeypatch.delenv(nome)
+    monkeypatch.setattr('backend.config.ARQUIVO_ENV', None)
     obter_configuracoes.cache_clear()
     yield
     obter_configuracoes.cache_clear()

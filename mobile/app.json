@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Aurora",
+    "slug": "aurora-rio-claro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "backgroundColor": "#2A2037",
+    "android": {
+      "package": "br.fatec.aurora",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#2A2037"
+      },
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#6B4A96"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5fa52075-0f91-4948-a380-d472bd8bb7e5"
+      }
+    },
+    "owner": "tauari"
+  }
+}

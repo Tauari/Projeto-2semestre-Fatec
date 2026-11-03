@@ -4,6 +4,7 @@ import { D } from '../shared/dados.js';
 import { cellOf, grossa } from '../shared/grade.js';
 import { areaName } from '../shared/bairros.js';
 import { S } from '../shared/estado.js';
+import { liberarLocalizacao, erroLocalizacao, modoAtencaoApp, textoMotivoModoAtencao, versaoApp } from '../shared/ambiente.js';
 import { Store } from '../shared/store.js';
 import { map } from './mapa.js';
 import { fmtDist, nearestApoio } from '../apoio/rede.js';
@@ -19,16 +20,25 @@ export function showMe(ll) {
 
 /* ------------------------------------------------------------------ modo atenção (GPS, só na versão arquivo) */
 export const Watch = {
-  id: null, on: false, cell: null, last: {},
-  start() {
+  id: null, on: !!(window.AuroraApp && window.AuroraApp.modoAtencao), nativo: !!(window.AuroraApp && window.AuroraApp.modoAtencao), cell: null, last: {},
+  async start() {
     if (!('geolocation' in navigator)) return;
-    this.on = true; this.cell = null;
-    this.id = navigator.geolocation.watchPosition(p => this.onPos(p), () => { toast('Não consegui acessar sua localização. Verifique a permissão do navegador.'); this.stop(); renderAlertas(false); },
+    if (versaoApp() >= 3) { // no app, quem confere os alertas é o app, mesmo fechado (a localização não sai do aparelho)
+      const r = await modoAtencaoApp(true);
+      if (!r.ok) { toast(textoMotivoModoAtencao(r.motivo), 9000); renderAlertas(false); return; }
+      this.on = true; this.nativo = true; renderAlertas(false);
+      toast('Modo atenção ligado: o Aurora avisa, mesmo com o app fechado, quando surgir um alerta perto de você.', 7000);
+      return;
+    }
+    if (!(await liberarLocalizacao())) { toast(erroLocalizacao(), 6000); renderAlertas(false); return; } // no app, pede a permissão ao Android
+    this.on = true; this.cell = null; renderAlertas(false);
+    this.id = navigator.geolocation.watchPosition(p => this.onPos(p), () => { toast(erroLocalizacao(), 6000); this.stop(); renderAlertas(false); },
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 30000 });
     try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { /* opcional */ }
     toast('Modo atenção ligado.');
   },
-  stop() { if (this.id != null) navigator.geolocation.clearWatch(this.id); this.id = null; this.on = false; this.cell = null; if (meMarker) { meMarker.remove(); meMarker = null; } },
+  stop() { if (this.nativo) { this.nativo = false; this.on = false; modoAtencaoApp(false); return; }
+    if (this.id != null) navigator.geolocation.clearWatch(this.id); this.id = null; this.on = false; this.cell = null; if (meMarker) { meMarker.remove(); meMarker = null; } },
   onPos(p) {
     const ll = [p.coords.latitude, p.coords.longitude]; showMe(ll);
     const id = cellOf(...ll); if (id === this.cell) return;

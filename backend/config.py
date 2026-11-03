@@ -1,4 +1,5 @@
-"""Configurações do servidor, lidas das variáveis de ambiente com o prefixo ``AURORA_``.
+"""Configurações do servidor, lidas das variáveis de ambiente com o prefixo ``AURORA_`` e do arquivo ``.env`` na raiz
+(fora do git; veja ``.env.example``). A variável de ambiente vale mais que o ``.env``.
 
 Os padrões reproduzem o comportamento atual do app. Onde a regra depende do Observatório, o padrão é
 o de hoje e o campo diz "decisão pendente". Listas vêm em JSON (ex.: ``AURORA_CORS_ORIGENS='["http://localhost:8080"]'``).
@@ -11,10 +12,11 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 RAIZ = Path(__file__).resolve().parents[1]
+ARQUIVO_ENV: Path | None = RAIZ / '.env'  # os testes põem None, para um .env local não vazar para eles
 
 
 class Configuracoes(BaseSettings):
@@ -41,8 +43,18 @@ class Configuracoes(BaseSettings):
     ia_ollama_url: str = 'http://localhost:11434'
     ia_timeout_s: float = Field(60.0, gt=0)
     ia_classificar_ao_criar: bool = True
+    # provedor "groq": o texto sai da máquina rumo à API do Groq, só depois da limpeza por regras (telefone, placa,
+    # número de casa, e-mail, documento, perfil e nome dito como "se chama X"; outros nomes podem passar)
+    groq_api_key: SecretStr | None = None
+    groq_modelo: str = 'openai/gpt-oss-120b'
+    groq_url: str = 'https://api.groq.com/openai/v1'
+    # notificação no celular (Expo Push): quem acompanha uma área recebe o alerta de um relato novo nela
+    push_ativo: bool = True
+    push_url: str = 'https://exp.host/--/api/v2/push/send'
+    push_intervalo_min: int = Field(10, ge=0)  # no máximo uma notificação por aparelho a cada tanto tempo
+    push_timeout_s: float = Field(10.0, gt=0)
 
 
 @lru_cache
 def obter_configuracoes() -> Configuracoes:
-    return Configuracoes()
+    return Configuracoes(_env_file=ARQUIVO_ENV)

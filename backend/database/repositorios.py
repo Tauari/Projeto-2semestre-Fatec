@@ -13,6 +13,7 @@ from backend.database.tabelas import (
     ConjuntoOficial,
     ConjuntoPercepcao,
     ConjuntoReferencia,
+    DispositivoPush,
     Relato,
     Voto,
 )
@@ -66,6 +67,39 @@ class RepositorioRelatos:
 
     def contar(self) -> int:
         return self.sessao.scalar(select(func.count()).select_from(Relato))
+
+
+class RepositorioPush:
+    def __init__(self, sessao: Session):
+        self.sessao = sessao
+
+    def registrar(self, token: str, areas: list[str]) -> DispositivoPush:
+        """Cria o aparelho ou troca as áreas dele (o ``ultimo_envio`` continua o mesmo)."""
+        d = self.sessao.get(DispositivoPush, token)
+        if d is None:
+            d = DispositivoPush(token=token, areas=list(areas), criado_em=instante_atual_ms(), ultimo_envio=0)
+            self.sessao.add(d)
+        else:
+            d.areas = list(areas)
+        self.sessao.flush()
+        return d
+
+    def remover(self, token: str) -> bool:
+        return self.sessao.execute(delete(DispositivoPush).where(DispositivoPush.token == token)).rowcount > 0
+
+    def remover_varios(self, tokens: list[str]) -> None:
+        if tokens:
+            self.sessao.execute(delete(DispositivoPush).where(DispositivoPush.token.in_(tokens)))
+
+    def com_areas(self) -> list[DispositivoPush]:
+        return [d for d in self.sessao.scalars(select(DispositivoPush)) if d.areas]
+
+    def marcar_envio(self, tokens: list[str], instante_ms: int) -> None:
+        for d in self.sessao.scalars(select(DispositivoPush).where(DispositivoPush.token.in_(tokens))):
+            d.ultimo_envio = instante_ms
+
+    def contar(self) -> int:
+        return self.sessao.scalar(select(func.count()).select_from(DispositivoPush))
 
 
 class RepositorioClassificacoes:

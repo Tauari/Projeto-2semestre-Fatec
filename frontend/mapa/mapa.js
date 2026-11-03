@@ -1,7 +1,7 @@
 import { janelaTxt } from '../config.js';
 import { $, $$, h, esc, cssVar, toast } from '../shared/dom.js';
 import { fmtN, plural } from '../shared/formato.js';
-import { STANDALONE } from '../shared/ambiente.js';
+import { STANDALONE, liberarLocalizacao, erroLocalizacao } from '../shared/ambiente.js';
 import { D, OSM } from '../shared/dados.js';
 import { cellOf, cellCenter, cellPoly } from '../shared/grade.js';
 import { BYNAME, areaName } from '../shared/bairros.js';
@@ -185,8 +185,11 @@ export function initMap() {
   $('#pickCancel').onclick = () => { stopPick(); openChat(); Chat.bot('Tudo bem. Você pode buscar o bairro pelo nome.'); };
   if (STANDALONE && 'geolocation' in navigator) {
     const b = $('#btnLocate'); b.hidden = false;
-    b.onclick = () => navigator.geolocation.getCurrentPosition(p => { const ll = [p.coords.latitude, p.coords.longitude]; showMe(ll); if (S.apoio && APOIO.length) openNearMe(ll); flyToVisible(ll, 15.5); },
-      () => toast('Não consegui acessar sua localização. Verifique a permissão do navegador.'), { enableHighAccuracy: true, timeout: 15000 });
+    b.onclick = async () => {
+      if (!(await liberarLocalizacao())) { toast(erroLocalizacao(), 6000); return; } // no app, pede a permissão ao Android
+      navigator.geolocation.getCurrentPosition(p => { const ll = [p.coords.latitude, p.coords.longitude]; showMe(ll); if (S.apoio && APOIO.length) openNearMe(ll); flyToVisible(ll, 15.5); },
+        () => toast(erroLocalizacao(), 6000), { enableHighAccuracy: true, timeout: 15000 });
+    };
   }
 }
 export function onMapClick(e) {

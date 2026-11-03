@@ -17,13 +17,14 @@ import { quickExit, instalarAtalhos } from './shared/saida-rapida.js';
 import { initMap, renderMap, setLayer } from './mapa/mapa.js';
 import { montarGaveta } from './mapa/gaveta.js';
 import { refreshPanel } from './mapa/painel-area.js';
-import { renderAreaList } from './mapa/lista-areas.js';
+import { renderAreaList, focusCell } from './mapa/lista-areas.js';
 import { renderPeriodSel, syncControls } from './mapa/controles.js';
 import { configurarApoio } from './apoio/rede.js';
 import { showApoioOnMap } from './apoio/camada-apoio.js';
 import { renderApoioPage } from './apoio/pagina-apoio.js';
-import { recentReports } from './relatos/relatos.js';
+import { recentReports, CELL_RE } from './relatos/relatos.js';
 import { renderAlertas } from './relatos/alertas.js';
+import { iniciarPush } from './shared/push.js';
 import { Chat, relatar, closeChat } from './chatbot/chat.js';
 import { renderDados } from './dashboard/dados-pesquisa.js';
 import { canModerate, renderMod } from './moderacao/moderacao.js';
@@ -61,15 +62,21 @@ export function boot() {
   renderApoioPage();
   Chat.init();
   renderMap();
+  /* tocar numa notificação do app abre a área do alerta; no início do app, o app nativo deixa a área em AuroraApp.areaInicial */
+  const abrirArea = c => { if (typeof c === 'string' && CELL_RE.test(c)) focusCell(c); };
+  window.addEventListener('aurora-abrir-area', e => abrirArea(e.detail && e.detail.cell));
+  let areaInicial = window.AuroraApp && window.AuroraApp.areaInicial;
   Store.on(() => {
     const modNav = $('[data-modnav]'); if (modNav) modNav.hidden = !canModerate();
     if (!S.userLayer && Store.ready && recentReports().length && S.layer !== 'relatos') { S.layer = 'relatos'; syncControls(); }
     renderMap(); refreshPanel();
+    if (areaInicial && Store.ready) { abrirArea(areaInicial); areaInicial = null; }
     if (S.view === 'dados') renderDados();
     if (S.view === 'alertas') renderAlertas(false);
     if (S.view === 'moderacao') renderMod();
   });
   Store.init();
+  iniciarPush();
   const tema = LS.get('tema', null); if (tema) document.documentElement.setAttribute('data-theme', tema); // escolha da pessoa vale mais que a do aparelho
   $('#btnTema').onclick = () => { const t = isDark() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); LS.set('tema', t); };
   const onTheme = () => renderMap();

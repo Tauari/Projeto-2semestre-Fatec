@@ -15,6 +15,7 @@ O projeto está migrando de um arquivo HTML único para um app com servidor (Fas
 | `index.html` | **Versão original**, que o GitHub Pages publica. É uma cópia de `dist/aurora.html`. |
 | `src/` | Código-fonte da versão original: `app.html`, `app.css`, `app.js`. Não editar durante a migração: é a referência. |
 | `vendor/` | Leaflet (biblioteca do mapa) e sua licença. |
+| `mobile/` | App Android (Expo) que abre o Aurora e liga as notificações no celular. Veja `mobile/README.md`. |
 
 ## Como rodar a nova versão
 
@@ -37,7 +38,8 @@ Para subir o servidor, que já serve o app em `http://localhost:8000`:
 - `--no-access-log` evita que o servidor escreva o IP de quem acessa.
 - A documentação da API fica em `http://localhost:8000/api/v1/docs`.
 
-Testes (243, incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js):
+Testes (incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js; rode com o Node 18 do sistema:
+com o Node 22 o `test_texto.py` falha, porque a tabela Unicode dele é mais nova que a do Python):
 
 ```bash
 .venv/Scripts/python -m pytest
@@ -100,6 +102,30 @@ Como cada ponto foi posicionado:
 Casas-abrigo nunca aparecem, para proteger quem está nelas. O encaminhamento para acolhimento seguro é feito pela rede, por exemplo pelo CREAS.
 
 Atenção a uma mudança recente: o CREAS saiu da Rua 1, 1809 em junho de 2024 e hoje atende na Rua 6, 640. O endereço antigo agora é do Conselho Tutelar, e algumas listas oficiais ainda mostram o endereço velho.
+
+## Alertas ao vivo e notificações
+
+Como os avisos do Waze, cada relato vira um **alerta com título padrão**, escolhido pelo tipo (o mais grave, se houver mais de um):
+assédio verbal = "Potencial assediador na área", perseguição = "Possível perseguidor na área", roubo ou furto = "Roubo ou furto na área",
+e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`, com um teste que confere que os dois batem).
+"Rua escura ou deserta" é condição do lugar, não um acontecimento: não vira alerta.
+
+- **No mapa:** cada relato aparece no painel da área (e em "Meus alertas") com o título padrão do tipo, por exemplo "Potencial assediador na área",
+  e, embaixo, só as **roupas e os acessórios** que a usuária citou: "Visto com: camiseta preta, calça roxa, boné azul"
+  (`frontend/relatos/acessorios.js`). Isso sai de listas fixas de peças e cores: nome, altura, cor da pele, cabelo, tatuagem,
+  idade, placa e o resto do texto nunca aparecem, mesmo que estejam no relato (o servidor ainda tira a descrição física antes de gravar).
+  O texto inteiro fica guardado e só a moderação o lê.
+- **No chat:** se a mulher só diz "fui assediada", sem apontar que foi algo falado, a Aurora não chuta "Assédio verbal": pergunta o que aconteceu
+  (assédio pode ser verbal, uma abordagem, exposição, violência física...).
+- **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
+  `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
+  10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
+- **Modo atenção (app fechado):** quem liga em *Meus alertas* recebe uma notificação quando surge um alerta a até 500 m, mesmo com o app
+  fechado. O app baixa `GET /api/v1/alertas` e compara com o GPS **no próprio celular**: a localização não vai para o servidor.
+  Detalhes e ajustes de bateria (Xiaomi) em `mobile/README.md`.
+- **Cuidado:** o alerta é de uma pessoa, sem verificação. Por isso o título diz "potencial" e o relato aparece como não verificado, e o
+  alerta só vale por algumas horas (6 h no `GET /alertas`). Só as roupas e os acessórios citados aparecem no alerta; nada disso vai na notificação. Definir se e como
+  o grupo verifica esses relatos é decisão pendente com o Observatório.
 
 ## Site no ar pelo GitHub Pages
 
