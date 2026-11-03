@@ -21,7 +21,8 @@ O servidor guarda só o token e as áreas (sem nome, e-mail, IP nem ligação co
 Você precisa de **Node 22 ou mais novo** (`node --version`) e de uma conta grátis em [expo.dev](https://expo.dev). O Expo SDK 58
 e o `eas-cli` não rodam no Node 18 que vem em algumas distribuições Linux.
 
-Neste computador o Node 22 está em `~/.local/node` e não entra sozinho no `PATH`. Em cada terminal novo, antes dos comandos:
+No Windows, basta instalar o Node 22 pelo instalador do nodejs.org (ele já entra no `PATH`) e pular este trecho. No Linux, se o Node 22 estiver numa pasta
+que não está no `PATH` (por exemplo `~/.local/node`), em cada terminal novo, antes dos comandos:
 
 ```bash
 export PATH=$HOME/.local/node/bin:$PATH

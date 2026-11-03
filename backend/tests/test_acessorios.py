@@ -30,7 +30,7 @@ def _acessorios(modulo):
         codigo = (f"import {{ acessorios }} from {json.dumps(modulo.as_uri())};\n"
                   "const textos = JSON.parse(process.argv[1]);\n"
                   "console.log(JSON.stringify(textos.map(t => acessorios(t))));")
-        r = subprocess.run(['node', '--input-type=module', '-e', codigo, json.dumps(textos)], capture_output=True, text=True, timeout=60)
+        r = subprocess.run(['node', '--input-type=module', '-e', codigo, json.dumps(textos)], capture_output=True, text=True, encoding='utf-8', timeout=60)  # no Windows o padrão não é UTF-8 e "calça" viraria lixo
         assert r.returncode == 0, r.stderr
         return json.loads(r.stdout)
     return chamar

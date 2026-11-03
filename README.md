@@ -38,8 +38,10 @@ Para subir o servidor, que já serve o app em `http://localhost:8000`:
 - `--no-access-log` evita que o servidor escreva o IP de quem acessa.
 - A documentação da API fica em `http://localhost:8000/api/v1/docs`.
 
-Testes (incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js; rode com o Node 18 do sistema:
-com o Node 22 o `test_texto.py` falha, porque a tabela Unicode dele é mais nova que a do Python):
+Testes (incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js). Se o `test_texto.py` falhar, veja as
+versões de Unicode: ele compara a normalização do Python com a do Node, e dá diferença quando as duas estão muito distantes (por exemplo,
+Python 3.12, Unicode 15, com Node 22, Unicode 17). Confira com `python -c "import unicodedata; print(unicodedata.unidata_version)"` e
+`node -e "console.log(process.versions.unicode)"`:
 
 ```bash
 .venv/Scripts/python -m pytest
