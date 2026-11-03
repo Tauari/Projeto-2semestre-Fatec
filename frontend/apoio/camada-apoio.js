@@ -82,8 +82,7 @@ export function telRows(tel) {
   return (tel || []).map(([n, l]) => h('div', { class: 'telrow' },
     h('div', null, h('a', { href: telHref(n), class: 'num', text: n }), l ? h('small', { text: l }) : null),
     h('div', { class: 'acts' },
-      h('a', { href: telHref(n), class: 'btn primary sm', 'aria-label': 'Ligar para ' + n }, icon('phone', 'i sm'), 'Ligar'),
-      h('button', { class: 'btn sm', type: 'button', 'data-copy': n, 'aria-label': 'Copiar ' + n }, icon('copy', 'i sm'), 'Copiar'))));
+      h('a', { href: telHref(n), class: 'btn primary sm', 'aria-label': 'Ligar para ' + n }, icon('phone', 'i sm'), 'Ligar'))));
 }
 export function srcLine(p) {
   const fs = p.fontes || [];
