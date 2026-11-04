@@ -1,102 +1,189 @@
 /* Aurora · mapa colaborativo de segurança para mulheres em Rio Claro (SP)
    Com o servidor da Aurora, os relatos ficam no servidor (modo api);
    sem ele, o app lê os arquivos de dados/ e guarda tudo no aparelho (modo local). */
-import { janelaTxt } from './config.js';
-import { $, $$, toast } from './shared/dom.js';
-import { fmtN } from './shared/formato.js';
-import { mq, isDark } from './shared/tema.js';
-import { LS } from './shared/armazenamento-local.js';
-import { D, AP as AP_DADOS, carregarDados } from './shared/dados.js';
-import { configurarGrade } from './shared/grade.js';
-import { configurarBairros } from './shared/bairros.js';
-import { S } from './shared/estado.js';
-import { Store } from './shared/store.js';
-import { showView } from './shared/navegacao.js';
-import { openSobre, closeSobre } from './shared/sobre.js';
-import { quickExit, instalarAtalhos } from './shared/saida-rapida.js';
-import { initMap, renderMap, setLayer } from './mapa/mapa.js';
-import { montarGaveta } from './mapa/gaveta.js';
-import { refreshPanel } from './mapa/painel-area.js';
-import { renderAreaList, focusCell } from './mapa/lista-areas.js';
-import { renderPeriodSel, syncControls } from './mapa/controles.js';
-import { configurarApoio } from './apoio/rede.js';
-import { showApoioOnMap } from './apoio/camada-apoio.js';
-import { renderApoioPage } from './apoio/pagina-apoio.js';
-import { recentReports, CELL_RE } from './relatos/relatos.js';
-import { renderAlertas } from './relatos/alertas.js';
-import { iniciarPush } from './shared/push.js';
-import { Chat, relatar, closeChat } from './chatbot/chat.js';
-import { renderDados } from './dashboard/dados-pesquisa.js';
-import { canModerate, renderMod } from './moderacao/moderacao.js';
+import { janelaTxt } from "./config.js";
+import { $, $$, toast } from "./shared/dom.js";
+import { fmtN } from "./shared/formato.js";
+import { mq, isDark } from "./shared/tema.js";
+import { LS } from "./shared/armazenamento-local.js";
+import { D, AP as AP_DADOS, carregarDados } from "./shared/dados.js";
+import { configurarGrade } from "./shared/grade.js";
+import { configurarBairros } from "./shared/bairros.js";
+import { S } from "./shared/estado.js";
+import { Store } from "./shared/store.js";
+import { showView } from "./shared/navegacao.js";
+import { openSobre, closeSobre } from "./shared/sobre.js";
+import { quickExit, instalarAtalhos } from "./shared/saida-rapida.js";
+import { initMap, renderMap, setLayer } from "./mapa/mapa.js";
+import { montarGaveta } from "./mapa/gaveta.js";
+import { refreshPanel } from "./mapa/painel-area.js";
+import { renderAreaList, focusCell } from "./mapa/lista-areas.js";
+import { renderPeriodSel, syncControls } from "./mapa/controles.js";
+import { configurarApoio } from "./apoio/rede.js";
+import { showApoioOnMap } from "./apoio/camada-apoio.js";
+import { renderApoioPage } from "./apoio/pagina-apoio.js";
+import { recentReports, CELL_RE } from "./relatos/relatos.js";
+import { renderAlertas } from "./relatos/alertas.js";
+import { iniciarPush } from "./shared/push.js";
+import { Chat, relatar, closeChat } from "./chatbot/chat.js";
+import { renderDados } from "./dashboard/dados-pesquisa.js";
+import { canModerate, renderMod } from "./moderacao/moderacao.js";
+import {
+  initObservatorio,
+  renderObservatorio,
+} from "./observatorio/observatorio.js";
 
 /* ------------------------------------------------------------------ inicialização */
 export function boot() {
-  $('#stBO').textContent = fmtN(D.bo.total.n);
-  $('#stPesq').textContent = D.pesq.n;
-  for (const b of $$('#layerSeg button')) b.onclick = () => setLayer(b.dataset.layer);
-  $('#periodSel').onchange = e => { S.period = e.target.value; renderMap(); refreshPanel(); };
-  $('#typeSel').onchange = e => { if (S.layer === 'relatos') S.tipo = e.target.value; else S.cat = e.target.value; renderMap(); };
-  $('#areaSearch').addEventListener('input', renderAreaList);
-  $('#areaMore').onclick = () => { S.showAll = !S.showAll; renderAreaList(); };
-  for (const b of $$('#sobreTabs button')) b.onclick = () => openSobre(b.dataset.tab);
-  $('#sobre').addEventListener('click', e => { if (e.target.id === 'sobre') closeSobre(); });
-  document.addEventListener('click', e => {
-    const b = e.target.closest('[data-view],[data-act],[data-copy]'); if (!b) return;
-    if (b.dataset.view) { showView(b.dataset.view); closeChat(); }
+  $("#stBO").textContent = fmtN(D.bo.total.n);
+  $("#stPesq").textContent = D.pesq.n;
+  for (const b of $$("#layerSeg button"))
+    b.onclick = () => setLayer(b.dataset.layer);
+  $("#periodSel").onchange = (e) => {
+    S.period = e.target.value;
+    renderMap();
+    refreshPanel();
+  };
+  $("#typeSel").onchange = (e) => {
+    if (S.layer === "relatos") S.tipo = e.target.value;
+    else S.cat = e.target.value;
+    renderMap();
+  };
+  $("#areaSearch").addEventListener("input", renderAreaList);
+  $("#areaMore").onclick = () => {
+    S.showAll = !S.showAll;
+    renderAreaList();
+  };
+  for (const b of $$("#sobreTabs button"))
+    b.onclick = () => openSobre(b.dataset.tab);
+  $("#sobre").addEventListener("click", (e) => {
+    if (e.target.id === "sobre") closeSobre();
+  });
+
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-view],[data-act],[data-copy]");
+    if (!b) return;
+    if (b.dataset.view) {
+      showView(b.dataset.view);
+      closeChat();
+    }
     const a = b.dataset.act;
-    if (a === 'relatar') relatar();
-    else if (a === 'sobre') openSobre(b.dataset.tab);
-    else if (a === 'fecharSobre') closeSobre();
-    else if (a === 'fecharChat') closeChat();
-    else if (a === 'recomecar') Chat.start();
-    else if (a === 'sair') quickExit();
-    else if (a === 'apoioMapa') showApoioOnMap();
+    if (a === "relatar") relatar();
+    else if (a === "sobre") openSobre(b.dataset.tab);
+    else if (a === "fecharSobre") closeSobre();
+    else if (a === "fecharChat") closeChat();
+    else if (a === "recomecar") Chat.start();
+    else if (a === "sair") quickExit();
+    else if (a === "apoioMapa") showApoioOnMap();
     if (b.dataset.copy) {
       const txt = b.dataset.copy;
-      try { navigator.clipboard.writeText(txt).then(() => toast('Copiado: ' + txt), () => toast('Número: ' + txt)); } catch (err) { toast('Número: ' + txt); }
+      try {
+        navigator.clipboard.writeText(txt).then(
+          () => toast("Copiado: " + txt),
+          () => toast("Número: " + txt),
+        );
+      } catch (err) {
+        toast("Número: " + txt);
+      }
     }
   });
+
   montarGaveta();
   syncControls();
   initMap();
   renderApoioPage();
   Chat.init();
   renderMap();
+  initObservatorio();
+
   /* tocar numa notificação do app abre a área do alerta; no início do app, o app nativo deixa a área em AuroraApp.areaInicial */
-  const abrirArea = c => { if (typeof c === 'string' && CELL_RE.test(c)) focusCell(c); };
-  window.addEventListener('aurora-abrir-area', e => abrirArea(e.detail && e.detail.cell));
+  const abrirArea = (c) => {
+    if (typeof c === "string" && CELL_RE.test(c)) focusCell(c);
+  };
+  window.addEventListener("aurora-abrir-area", (e) =>
+    abrirArea(e.detail && e.detail.cell),
+  );
   let areaInicial = window.AuroraApp && window.AuroraApp.areaInicial;
+
   Store.on(() => {
-    const modNav = $('[data-modnav]'); if (modNav) modNav.hidden = !canModerate();
-    if (!S.userLayer && Store.ready && recentReports().length && S.layer !== 'relatos') { S.layer = 'relatos'; syncControls(); }
-    renderMap(); refreshPanel();
-    if (areaInicial && Store.ready) { abrirArea(areaInicial); areaInicial = null; }
-    if (S.view === 'dados') renderDados();
-    if (S.view === 'alertas') renderAlertas(false);
-    if (S.view === 'moderacao') renderMod();
+    const modNav = $("[data-modnav]");
+    if (modNav) modNav.hidden = !canModerate();
+    if (
+      !S.userLayer &&
+      Store.ready &&
+      recentReports().length &&
+      S.layer !== "relatos"
+    ) {
+      S.layer = "relatos";
+      syncControls();
+    }
+    renderMap();
+    refreshPanel();
+    if (areaInicial && Store.ready) {
+      abrirArea(areaInicial);
+      areaInicial = null;
+    }
+    if (S.view === "dados") renderDados();
+    if (S.view === "alertas") renderAlertas(false);
+    if (S.view === "moderacao") renderMod();
+    if (S.view === "observatorio") renderObservatorio();
   });
+
   Store.init();
   iniciarPush();
-  const tema = LS.get('tema', null); if (tema) document.documentElement.setAttribute('data-theme', tema); // escolha da pessoa vale mais que a do aparelho
-  $('#btnTema').onclick = () => { const t = isDark() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); LS.set('tema', t); };
+
+  const tema = LS.get("tema", null);
+  if (tema) document.documentElement.setAttribute("data-theme", tema); // escolha da pessoa vale mais que a do aparelho
+
+  $("#btnTema").onclick = () => {
+    const t = isDark() ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    LS.set("tema", t);
+  };
   const onTheme = () => renderMap();
-  if (mq.addEventListener) mq.addEventListener('change', onTheme);
-  new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-  setInterval(() => { renderPeriodSel(); if (S.period === 'agora') { renderMap(); refreshPanel(); } }, 5 * 60e3);
+  if (mq.addEventListener) mq.addEventListener("change", onTheme);
+  new MutationObserver(onTheme).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+
+  setInterval(() => {
+    renderPeriodSel();
+    if (S.period === "agora") {
+      renderMap();
+      refreshPanel();
+    }
+  }, 60e3);
 }
-/* os atalhos de teclado (Esc duas vezes = sair rápido) valem desde o início, como no legado */
+
 export async function iniciar() {
   instalarAtalhos();
-  /* o botão "Sair rápido" também funciona enquanto os dados carregam (ou se não carregarem); o boot assume depois */
-  const sairCedo = e => { if (e.target.closest('[data-act="sair"]')) quickExit(); };
-  document.addEventListener('click', sairCedo);
-  const nota = document.getElementById('mapNote');
-  if (!window.L) { nota.lastChild.textContent = 'O mapa não carregou. Verifique a conexão e recarregue a página.'; return; }
-  nota.lastChild.textContent = 'Carregando dados…';
-  try { await carregarDados(); } catch (e) { console.error(e); nota.lastChild.textContent = 'Não consegui carregar os dados. Verifique a conexão e recarregue a página.'; return; }
-  configurarGrade(D.hex); configurarBairros(); configurarApoio(AP_DADOS);
-  const jan = document.querySelector('#stRel ~ small'); if (jan) jan.textContent = 'últimos ' + janelaTxt();
-  document.removeEventListener('click', sairCedo);
+  const sairCedo = (e) => {
+    if (e.target.closest('[data-act="sair"]')) quickExit();
+  };
+  document.addEventListener("click", sairCedo);
+  const nota = document.getElementById("mapNote");
+  if (!window.L) {
+    nota.lastChild.textContent =
+      "O mapa não carregou. Verifique a conexão e recarregue a página.";
+    return;
+  }
+  nota.lastChild.textContent = "Carregando dados…";
+  try {
+    await carregarDados();
+  } catch (e) {
+    console.error(e);
+    nota.lastChild.textContent =
+      "Não consegui carregar os dados. Verifique a conexão e recarregue a página.";
+    return;
+  }
+  configurarGrade(D.hex);
+  configurarBairros();
+  configurarApoio(AP_DADOS);
+  const jan = document.querySelector("#stRel ~ small");
+  if (jan) jan.textContent = "últimos " + janelaTxt();
+  document.removeEventListener("click", sairCedo);
   boot();
 }
+
 iniciar();

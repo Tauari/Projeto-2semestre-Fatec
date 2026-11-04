@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  aurora:
+    build: .
+    container_name: aurora_app
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mantém os dados locais sincronizados com o contêiner
+      - ./dados:/app/dados
+    restart: unless-stopped
