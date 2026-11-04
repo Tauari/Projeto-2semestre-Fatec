@@ -36,7 +36,11 @@ def criar_motor(url: str) -> Engine:
     # hide_parameters: os valores (ex.: o texto de um relato) não aparecem em mensagens de erro nem em log de SQL
     if u.get_backend_name() != 'sqlite':
         # banco na nuvem: o pre_ping troca a conexão que o provedor derrubou (ex.: Postgres que "dorme" sem uso); o recycle evita conexão velha
-        return create_engine(url, pool_pre_ping=True, pool_recycle=300, hide_parameters=True)
+        opcoes_pg: dict = {'pool_pre_ping': True, 'pool_recycle': 300, 'hide_parameters': True}
+        if url.startswith('postgresql+psycopg://'):
+            # sem comandos "preparados" no servidor: funciona também atrás do pooler (pgbouncer) que alguns provedores põem na frente
+            opcoes_pg['connect_args'] = {'prepare_threshold': None}
+        return create_engine(url, **opcoes_pg)
     opcoes: dict = {'connect_args': {'check_same_thread': False}, 'hide_parameters': True}
     if not u.database or u.database == ':memory:':
         opcoes['poolclass'] = StaticPool  # banco em memória: uma conexão só, vista por todas as threads

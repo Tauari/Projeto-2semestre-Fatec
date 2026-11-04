@@ -142,28 +142,37 @@ O aviso por GPS precisa de endereço `https://` (o GitHub Pages já dá) e da pe
 O servidor já aceita **Postgres**: não há o que reescrever, só trocar a variável `AURORA_BANCO_URL` (o SQLAlchemy cuida do resto).
 Sem ela, continua o SQLite local de sempre. Duas peças precisam ficar no ar: o **Postgres** (onde ficam os relatos) e o **servidor**
 (que serve o site e a API). Só o banco na nuvem não basta: sem o servidor, o app continuaria dependendo do seu computador.
+O caminho escolhido é **Neon** (banco) + **Render** (servidor), ambos com plano grátis.
 
-1. **Banco:** crie um Postgres gerenciado (por exemplo no Neon) e copie a *connection string*
-   (`postgresql://usuario:senha@host/banco?sslmode=require`). O Aurora aceita `postgres://` e `postgresql://`.
-2. **Servidor:** hospede a imagem do `Dockerfile` desta pasta (Render, Google Cloud Run, Fly.io, Railway...). Ele escuta em `$PORT`.
-   Configure estas variáveis **na hospedagem**, nunca no git:
+**1. Banco no Neon**
 
-   | Variável | Valor |
-   | --- | --- |
-   | `AURORA_BANCO_URL` | a connection string do Postgres |
-   | `AURORA_IA_PROVEDOR` | `groq` (ou deixe `heuristica`) |
-   | `AURORA_GROQ_API_KEY` | a chave do Groq (se usar `groq`) |
+1. Crie a conta em [neon.com](https://neon.com) (dá para entrar com Google ou GitHub).
+2. *Create project*: nome `aurora` e região **AWS US East 1 (N. Virginia)**, a mesma do Render.
+3. Em *Connect*, copie a *connection string* (começa com `postgresql://`). Guarde só para colar no Render: nada de arquivo do git.
 
-   Na primeira subida o servidor cria as tabelas e carrega os arquivos de `dados/` sozinho. A rota de saúde é `/api/v1/saude`.
-3. **Endereço fixo:** a hospedagem dá um endereço `https://...`. Cole esse endereço no app Aurora no lugar do link do túnel; o `cloudflared`
-   deixa de ser necessário.
-4. **pgAdmin (opcional):** serve para **olhar e administrar** o banco da nuvem pelo computador, não para hospedá-lo. Em *Register → Server*,
-   preencha Host, Porta (5432), Database, Username e Password da connection string e, na aba *SSL*, use **Require**. As tabelas ficam em
-   *Databases → banco → Schemas → public → Tables* (`relatos`, `dispositivos_push`, `classificacoes`...).
+**2. Servidor no Render**
 
-Cuidados: planos grátis costumam **dormir** quando ninguém usa (o primeiro acesso demora até cerca de 1 minuto), a API passa a ser pública
-(ainda não há limite de envios por pessoa) e os relatos passam a ficar num servidor de terceiros, o que entra na conversa de LGPD com o
-Observatório. Os relatos de teste do SQLite local não migram sozinhos; o banco novo começa vazio.
+1. Crie a conta em [render.com](https://render.com) (pode ser com o GitHub).
+2. *New → Blueprint* e informe o repositório `https://github.com/Tauari/Projeto-2semestre-Fatec` (é público). Escolha a branch que tem o
+   `render.yaml` (hoje `branch-tauari`; depois que for para a `main`, use a `main`).
+3. O Render lê o `render.yaml` e pergunta os dois segredos: `AURORA_BANCO_URL` (a string do Neon) e `AURORA_GROQ_API_KEY` (a chave do Groq).
+   Cole e clique em *Apply*. Eles ficam guardados no Render, nunca no git. Para usar só as regras (sem IA), troque `AURORA_IA_PROVEDOR` para
+   `heuristica` em *Environment*.
+4. Espere o primeiro build (alguns minutos). Na primeira subida o servidor cria as tabelas e carrega os arquivos de `dados/` sozinho.
+5. Quando o serviço ficar *Live*, abra `https://NOME.onrender.com/api/v1/saude`: deve responder `{"status":"ok", ...}`.
+6. **Endereço fixo:** cole esse endereço no app Aurora (⚙) no lugar do link do túnel. O `cloudflared` deixa de ser necessário.
+
+A cada `git push` na branch escolhida o Render publica de novo. Se algo não subir, veja a aba *Logs* do serviço: o erro mais comum é a
+string do banco colada errada.
+
+**3. pgAdmin (opcional)** serve para **olhar e administrar** o banco da nuvem pelo computador, não para hospedá-lo. Em *Register → Server*,
+preencha Host, Porta (5432), Database, Username e Password da string do Neon e, na aba *SSL*, use **Require**. As tabelas ficam em
+*Databases → banco → Schemas → public → Tables* (`relatos`, `dispositivos_push`, `classificacoes`...).
+
+Cuidados: no plano grátis o servidor do Render **dorme** quando ninguém usa (o primeiro acesso demora até cerca de 1 minuto; abra o site uns
+10 minutos antes da apresentação), a API passa a ser pública (ainda não há limite de envios por pessoa) e os relatos passam a ficar num
+servidor de terceiros, o que entra na conversa de LGPD com o Observatório. Os relatos de teste do SQLite local não migram sozinhos; o banco
+novo começa vazio. Os dados são os mesmos de `dados/`, que o servidor carrega a cada subida.
 
 ## Como atualizar os dados
 

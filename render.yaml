@@ -1,0 +1,17 @@
+# Blueprint do Render: um serviço web que roda o Dockerfile desta pasta. O banco fica no Neon (Postgres); veja o README.
+# Os valores com "sync: false" o Render pergunta na hora de criar e guarda como segredo: nunca ficam no git.
+services:
+  - type: web
+    name: aurora
+    runtime: docker
+    plan: free
+    region: virginia            # o mais perto do Brasil; crie o banco do Neon na mesma região (AWS US East 1)
+    healthCheckPath: /api/v1/saude
+    autoDeploy: true
+    envVars:
+      - key: AURORA_BANCO_URL   # connection string do Neon (postgresql://...?sslmode=require)
+        sync: false
+      - key: AURORA_IA_PROVEDOR
+        value: groq
+      - key: AURORA_GROQ_API_KEY
+        sync: false
