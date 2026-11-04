@@ -137,6 +137,34 @@ e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`
 
 O aviso por GPS precisa de endereço `https://` (o GitHub Pages já dá) e da permissão de localização do navegador. Ele funciona enquanto a página está aberta.
 
+## Servidor e banco na nuvem (sem depender de um computador ligado)
+
+O servidor já aceita **Postgres**: não há o que reescrever, só trocar a variável `AURORA_BANCO_URL` (o SQLAlchemy cuida do resto).
+Sem ela, continua o SQLite local de sempre. Duas peças precisam ficar no ar: o **Postgres** (onde ficam os relatos) e o **servidor**
+(que serve o site e a API). Só o banco na nuvem não basta: sem o servidor, o app continuaria dependendo do seu computador.
+
+1. **Banco:** crie um Postgres gerenciado (por exemplo no Neon) e copie a *connection string*
+   (`postgresql://usuario:senha@host/banco?sslmode=require`). O Aurora aceita `postgres://` e `postgresql://`.
+2. **Servidor:** hospede a imagem do `Dockerfile` desta pasta (Render, Google Cloud Run, Fly.io, Railway...). Ele escuta em `$PORT`.
+   Configure estas variáveis **na hospedagem**, nunca no git:
+
+   | Variável | Valor |
+   | --- | --- |
+   | `AURORA_BANCO_URL` | a connection string do Postgres |
+   | `AURORA_IA_PROVEDOR` | `groq` (ou deixe `heuristica`) |
+   | `AURORA_GROQ_API_KEY` | a chave do Groq (se usar `groq`) |
+
+   Na primeira subida o servidor cria as tabelas e carrega os arquivos de `dados/` sozinho. A rota de saúde é `/api/v1/saude`.
+3. **Endereço fixo:** a hospedagem dá um endereço `https://...`. Cole esse endereço no app Aurora no lugar do link do túnel; o `cloudflared`
+   deixa de ser necessário.
+4. **pgAdmin (opcional):** serve para **olhar e administrar** o banco da nuvem pelo computador, não para hospedá-lo. Em *Register → Server*,
+   preencha Host, Porta (5432), Database, Username e Password da connection string e, na aba *SSL*, use **Require**. As tabelas ficam em
+   *Databases → banco → Schemas → public → Tables* (`relatos`, `dispositivos_push`, `classificacoes`...).
+
+Cuidados: planos grátis costumam **dormir** quando ninguém usa (o primeiro acesso demora até cerca de 1 minuto), a API passa a ser pública
+(ainda não há limite de envios por pessoa) e os relatos passam a ficar num servidor de terceiros, o que entra na conversa de LGPD com o
+Observatório. Os relatos de teste do SQLite local não migram sozinhos; o banco novo começa vazio.
+
 ## Como atualizar os dados
 
 Precisa de Python 3 (sem bibliotecas extras).

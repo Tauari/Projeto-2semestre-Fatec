@@ -22,11 +22,21 @@ SessionLocal = sessionmaker(autoflush=False, expire_on_commit=False)
 _url_atual: str | None = None
 
 
+def normalizar_url(url: str) -> str:
+    """As hospedagens de Postgres entregam ``postgres://`` ou ``postgresql://``; o SQLAlchemy precisa do driver no nome."""
+    for prefixo in ('postgres://', 'postgresql://'):
+        if url.startswith(prefixo):
+            return 'postgresql+psycopg://' + url[len(prefixo):]
+    return url
+
+
 def criar_motor(url: str) -> Engine:
+    url = normalizar_url(url)
     u = make_url(url)
     # hide_parameters: os valores (ex.: o texto de um relato) não aparecem em mensagens de erro nem em log de SQL
     if u.get_backend_name() != 'sqlite':
-        return create_engine(url, pool_pre_ping=True, hide_parameters=True)
+        # banco na nuvem: o pre_ping troca a conexão que o provedor derrubou (ex.: Postgres que "dorme" sem uso); o recycle evita conexão velha
+        return create_engine(url, pool_pre_ping=True, pool_recycle=300, hide_parameters=True)
     opcoes: dict = {'connect_args': {'check_same_thread': False}, 'hide_parameters': True}
     if not u.database or u.database == ':memory:':
         opcoes['poolclass'] = StaticPool  # banco em memória: uma conexão só, vista por todas as threads
@@ -49,7 +59,7 @@ def criar_motor(url: str) -> Engine:
 def configurar_banco(url: str | None = None) -> Engine:
     """Cria o ``engine`` para a URL (padrão: ``banco_url``) e liga o ``SessionLocal`` a ele."""
     global engine, _url_atual
-    url = url or obter_configuracoes().banco_url
+    url = normalizar_url(url or obter_configuracoes().banco_url)
     if engine is not None and url == _url_atual:
         return engine
     if engine is not None:
