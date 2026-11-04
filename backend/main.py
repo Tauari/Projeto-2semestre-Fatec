@@ -1,10 +1,3 @@
-"""Servidor da Aurora: a API em ``/api/v1``, o Leaflet em ``/vendor`` e o frontend em ``/``.
-
-``dados/`` não é servida como pasta: os dados só saem pelas rotas da API. Rode sem log de acesso, para
-não gravar IPs no console::
-
-    python -m uvicorn backend.main:app --no-access-log
-"""
 from __future__ import annotations
 
 import logging
@@ -156,24 +149,39 @@ async def _ciclo_de_vida(app: FastAPI):
 def create_app() -> FastAPI:
     cfg = obter_configuracoes()
     banco.configurar_banco(cfg.banco_url)
-    app = FastAPI(title='Aurora Rio Claro', version=__version__, lifespan=_ciclo_de_vida,
-                  docs_url=PREFIXO_API + '/docs', redoc_url=None, openapi_url=PREFIXO_API + '/openapi.json')
-    app.add_exception_handler(StarletteHTTPException, _tratar_http)
-    app.add_exception_handler(RequestValidationError, _tratar_validacao)
+    app = FastAPI(
+        title='Aurora Rio Claro',
+        version=__version__,
+        lifespan=_ciclo_de_vida,
+        docs_url=PREFIXO_API + '/docs',
+        redoc_url=None,
+        openapi_url=PREFIXO_API + '/openapi.json'
+    )
+    app.add_exception_handler(StarletteHTTPException, _tratar_http) # type: ignore[arg-type]
+    app.add_exception_handler(RequestValidationError, _tratar_validacao) # type: ignore[arg-type]
     app.add_exception_handler(Exception, _tratar_erro_interno)
     app.add_middleware(LimiteDeCorpo, limite=cfg.limite_corpo_bytes)
+    
     if cfg.cors_origens:
-        app.add_middleware(CORSMiddleware, allow_origins=cfg.cors_origens, allow_methods=['GET', 'POST', 'DELETE'],
-                           allow_headers=['Content-Type', 'X-Chave-Exclusao'])
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cfg.cors_origens,
+            allow_methods=['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
+            allow_headers=['Content-Type', 'X-Chave-Exclusao', 'Authorization']
+        )
+        
+    # Inclui todas as rotas (Relatos, IA/Chatbot, Boletins, Observatório e Usuários/Admin)
     for rota in ROTAS:
         app.include_router(rota, prefix=PREFIXO_API)
+        
     if cfg.servir_frontend:
         vendor, frontend = Path(cfg.pasta_vendor), Path(cfg.pasta_frontend)
         if vendor.is_dir():
             app.mount('/vendor', StaticFiles(directory=vendor), name='vendor')
         if frontend.is_dir():
-            # por último: "/" casa com tudo o que as rotas acima não pegaram
-            app.router.routes.append(_MontagemFrontend('/', app=_EstaticosSemCache(directory=frontend, html=True), name='frontend'))
+            app.router.routes.append(
+                _MontagemFrontend('/', app=_EstaticosSemCache(directory=frontend, html=True), name='frontend')
+            )
     return app
 
 
