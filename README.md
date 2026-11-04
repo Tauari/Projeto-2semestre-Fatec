@@ -1,4 +1,4 @@
-# Aurora · MVP 02 — Rio Claro
+# Aurora · MVP 03 — Rio Claro
 
 Mapa colaborativo de segurança para mulheres em Rio Claro (SP), com chat para registrar situações sem identificação e os pontos da rede de apoio: onde registrar ocorrência, pedir medida protetiva, conversar com alguém ou ser atendida na saúde.
 
@@ -6,16 +6,16 @@ Mapa colaborativo de segurança para mulheres em Rio Claro (SP), com chat para r
 
 O projeto está migrando de um arquivo HTML único para um app com servidor (FastAPI) e frontend em módulos. **As duas versões convivem:** a original continua publicada e é a referência de comportamento até cada parte ser migrada e verificada.
 
-| Caminho | Para quê |
-| ----- | ----- |
-| `backend/` | **Novo.** Servidor FastAPI: API em `/api/v1`, banco de dados, anonimização, classificação, provedores de IA e testes. |
-| `frontend/` | **Novo.** O mesmo app dividido em módulos por área (`mapa/`, `relatos/`, `chatbot/`, `apoio/`, `dashboard/`, `moderacao/`, `observatorio/`, `shared/`). Sem framework e sem etapa de build. |
-| `scripts/` | `preparar_dados.py` e `preparar_mapa.py` (geram os dados) e `montar.py` (gera a versão original em arquivo único). |
-| `dados/` | Dados agregados, rede de apoio e `osm/` (mapa de ruas do OpenStreetMap). Os dados brutos ficam fora (veja `dados/LEIA-ME-DADOS.md`). |
-| `index.html` | **Versão original**, que o GitHub Pages publica. É uma cópia de `dist/aurora.html`. |
-| `src/` | Código-fonte da versão original: `app.html`, `app.css`, `app.js`. Não editar durante a migração: é a referência. |
-| `vendor/` | Leaflet (biblioteca do mapa) e sua licença. |
-| `mobile/` | App Android (Expo) que abre o Aurora e liga as notificações no celular. Veja `mobile/README.md`. |
+| Caminho      | Para quê                                                                                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/`   | **Novo.** Servidor FastAPI: API em `/api/v1`, banco de dados, anonimização, classificação, provedores de IA e testes.                                                                       |
+| `frontend/`  | **Novo.** O mesmo app dividido em módulos por área (`mapa/`, `relatos/`, `chatbot/`, `apoio/`, `dashboard/`, `moderacao/`, `observatorio/`, `shared/`). Sem framework e sem etapa de build. |
+| `scripts/`   | `preparar_dados.py` e `preparar_mapa.py` (geram os dados) e `montar.py` (gera a versão original em arquivo único).                                                                          |
+| `dados/`     | Dados agregados, rede de apoio e `osm/` (mapa de ruas do OpenStreetMap). Os dados brutos ficam fora (veja `dados/LEIA-ME-DADOS.md`).                                                        |
+| `index.html` | **Versão original**, que o GitHub Pages publica. É uma cópia de `dist/aurora.html`.                                                                                                         |
+| `src/`       | Código-fonte da versão original: `app.html`, `app.css`, `app.js`. Não editar durante a migração: é a referência.                                                                            |
+| `vendor/`    | Leaflet (biblioteca do mapa) e sua licença.                                                                                                                                                 |
+| `mobile/`    | App Android (Expo) que abre o Aurora e liga as notificações no celular. Veja `mobile/README.md`.                                                                                            |
 
 ## Como rodar a nova versão
 
@@ -36,11 +36,11 @@ Para subir o servidor, que já serve o app em `http://localhost:8000`:
 
 ```
 
-* Na primeira execução, o servidor cria o banco `backend/database/aurora.db` (SQLite, fora do git) e carrega nele os arquivos de `dados/`. Depois de editar um arquivo de `dados/`, reinicie o servidor: na inicialização ele compara cada arquivo com o que já carregou e recarrega só o que mudou.
+- Na primeira execução, o servidor cria o banco `backend/database/aurora.db` (SQLite, fora do git) e carrega nele os arquivos de `dados/`. Depois de editar um arquivo de `dados/`, reinicie o servidor: na inicialização ele compara cada arquivo com o que já carregou e recarrega só o que mudou.
 
-* `--no-access-log` evita que o servidor escreva o IP de quem acessa.
+- `--no-access-log` evita que o servidor escreva o IP de quem acessa.
 
-* A documentação da API fica em `http://localhost:8000/api/v1/docs`.
+- A documentação da API fica em `http://localhost:8000/api/v1/docs`.
 
 Testes (incluindo a comparação automática com o código original em JavaScript, que precisa do Node.js; rode com o Node 18 do sistema:
 com o Node 22 o `test_texto.py` falha, porque a tabela Unicode dele é mais nova que a do Python):
@@ -63,14 +63,14 @@ Depois abra `http://localhost:8080/frontend/`. A versão original continua em `h
 
 ### O que já passa pelo servidor (fase 1)
 
-| Funcionalidade | Onde fica agora |
-| ----- | ----- |
-| Mapa, camadas, filtros, painel de área, trajeto, GPS, saída rápida | Frontend (igual à original) |
-| Relatos: publicar, listar, apagar | **Servidor** (`/relatos`). O texto é anonimizado de novo no servidor; quem publica recebe uma chave para apagar, guardada só no aparelho. |
-| Dados oficiais (B.O.), pesquisa de percepção, geografia, rede de apoio | **Servidor**, cada tipo de evidência na sua rota e na sua tabela |
-| Classificação automática | **Servidor**. Fica numa tabela separada do relato e não muda os tipos escolhidos pela usuária. |
-| Extração do texto livre (IA) | Interface de provedor no servidor (`/api/v1/ia`). O provedor padrão são as mesmas regras de palavras-chave da versão original. Sem modelo de IA configurado, o texto do chat não sai do aparelho. |
-| Votos, moderação, áreas acompanhadas | Ainda no aparelho. A tela de moderação fica escondida quando há servidor, até a moderação ser migrada. |
+| Funcionalidade                                                         | Onde fica agora                                                                                                                                                                                   |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mapa, camadas, filtros, painel de área, trajeto, GPS, saída rápida     | Frontend (igual à original)                                                                                                                                                                       |
+| Relatos: publicar, listar, apagar                                      | **Servidor** (`/relatos`). O texto é anonimizado de novo no servidor; quem publica recebe uma chave para apagar, guardada só no aparelho.                                                         |
+| Dados oficiais (B.O.), pesquisa de percepção, geografia, rede de apoio | **Servidor**, cada tipo de evidência na sua rota e na sua tabela                                                                                                                                  |
+| Classificação automática                                               | **Servidor**. Fica numa tabela separada do relato e não muda os tipos escolhidos pela usuária.                                                                                                    |
+| Extração do texto livre (IA)                                           | Interface de provedor no servidor (`/api/v1/ia`). O provedor padrão são as mesmas regras de palavras-chave da versão original. Sem modelo de IA configurado, o texto do chat não sai do aparelho. |
+| Votos, moderação, áreas acompanhadas                                   | Ainda no aparelho. A tela de moderação fica escondida quando há servidor, até a moderação ser migrada.                                                                                            |
 
 Configurações pendentes de decisão com o Observatório ficam em variáveis `AURORA_*` (veja `backend/config.py`). O padrão de cada uma reproduz o comportamento atual: por exemplo, `AURORA_RELATOS_RETENCAO_DIAS` (padrão: não apagar) e `AURORA_RELATOS_PRECISAO_CRIADO` (padrão: hora exata).
 
@@ -82,23 +82,23 @@ O mesmo código roda nos dois lugares e muda de comportamento sozinho. O mapa de
 
 Ícones redondos mostram 14 pontos, com endereço, horário, telefone, fonte e botão “Como chegar”:
 
-* **Registrar ocorrência e medida protetiva**: Delegacia de Defesa da Mulher (Av. 23, 1300, com a Delegacia Seccional no mesmo prédio) e Guarda Civil Municipal com a Patrulha Maria da Penha (Rua 12, 26).
+- **Registrar ocorrência e medida protetiva**: Delegacia de Defesa da Mulher (Av. 23, 1300, com a Delegacia Seccional no mesmo prédio) e Guarda Civil Municipal com a Patrulha Maria da Penha (Rua 12, 26).
 
-* **Conversar e ter acompanhamento**: Secretaria Municipal da Mulher (Rua 7, 830), CREAS (Rua 6, 640) e cinco CRAS. O CRAS Panorama fica só na lista porque não deu para confirmar a posição.
+- **Conversar e ter acompanhamento**: Secretaria Municipal da Mulher (Rua 7, 830), CREAS (Rua 6, 640) e cinco CRAS. O CRAS Panorama fica só na lista porque não deu para confirmar a posição.
 
-* **Orientação jurídica e Justiça**: Defensoria Pública (Rua 1, 659) e Anexo de Violência Doméstica do TJSP (Rua 7, 830, no prédio da Secretaria da Mulher).
+- **Orientação jurídica e Justiça**: Defensoria Pública (Rua 1, 659) e Anexo de Violência Doméstica do TJSP (Rua 7, 830, no prédio da Secretaria da Mulher).
 
-* **Saúde 24 horas**: pronto-socorro ginecológico e obstétrico (Av. 15 com Rua 2, referência depois de violência sexual), UPA 29 e PA Jardim Chervezon.
+- **Saúde 24 horas**: pronto-socorro ginecológico e obstétrico (Av. 15 com Rua 2, referência depois de violência sexual), UPA 29 e PA Jardim Chervezon.
 
 Toque numa área do mapa e o painel mostra a ajuda mais perto para registrar ocorrência, para conversar e para a saúde. A caixa “Onde pedir ajuda” na legenda liga e desliga a camada. A página Apoio traz a mesma lista, com “Ver no mapa” em cada serviço.
 
 Como cada ponto foi posicionado:
 
-* **Exata**: o prédio está mapeado no OpenStreetMap com o mesmo endereço.
+- **Exata**: o prédio está mapeado no OpenStreetMap com o mesmo endereço.
 
-* **Pelo endereço**: calculado a partir do endereço oficial, usando as esquinas citadas e números de prédios já mapeados na mesma rua para achar a quadra e o lado da rua. Margem de uns 30 metros.
+- **Pelo endereço**: calculado a partir do endereço oficial, usando as esquinas citadas e números de prédios já mapeados na mesma rua para achar a quadra e o lado da rua. Margem de uns 30 metros.
 
-* **Aproximada** (CRAS Mãe Preta e CRAS Jardim Brasília): margem de até 100 metros. O ícone tem borda tracejada.
+- **Aproximada** (CRAS Mãe Preta e CRAS Jardim Brasília): margem de até 100 metros. O ícone tem borda tracejada.
 
 Casas-abrigo nunca aparecem, para proteger quem está nelas. O encaminhamento para acolhimento seguro é feito pela rede, por exemplo pelo CREAS.
 
@@ -111,24 +111,24 @@ assédio verbal = "Potencial assediador na área", perseguição = "Possível pe
 e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`, com um teste que confere que os dois batem).
 "Rua escura ou deserta" é condição do lugar, não um acontecimento: não vira alerta.
 
-* **No mapa:** cada relato aparece no painel da área (e em "Meus alertas") com o título padrão do tipo, por exemplo "Potencial assediador na área",
+- **No mapa:** cada relato aparece no painel da área (e em "Meus alertas") com o título padrão do tipo, por exemplo "Potencial assediador na área",
   e, embaixo, só as **roupas e os acessórios** que a usuária citou: "Visto com: camiseta preta, calça roxa, boné azul"
   (`frontend/relatos/acessorios.js`). Isso sai de listas fixas de peças e cores: nome, altura, cor da pele, cabelo, tatuagem,
   idade, placa e o resto do texto nunca aparecem, mesmo que estejam no relato (o servidor ainda tira a descrição física antes de gravar).
   O texto inteiro fica guardado e só a moderação o lê.
 
-* **No chat:** se a mulher só diz "fui assediada", sem apontar que foi algo falado, a Aurora não chuta "Assédio verbal": pergunta o que aconteceu
+- **No chat:** se a mulher só diz "fui assediada", sem apontar que foi algo falado, a Aurora não chuta "Assédio verbal": pergunta o que aconteceu
   (assédio pode ser verbal, uma abordagem, exposição, violência física...).
 
-* **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
+- **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
   `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
   10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
 
-* **Modo atenção (app fechado):** quem liga em *Meus alertas* recebe uma notificação quando surge um alerta a até 500 m, mesmo com o app
+- **Modo atenção (app fechado):** quem liga em _Meus alertas_ recebe uma notificação quando surge um alerta a até 500 m, mesmo com o app
   fechado. O app baixa `GET /api/v1/alertas` e compara com o GPS **no próprio celular**: a localização não vai para o servidor.
   Detalhes e ajustes de bateria (Xiaomi) em `mobile/README.md`.
 
-* **Cuidado:** o alerta é de uma pessoa, sem verificação. Por isso o título diz "potencial" e o relato aparece como não verificado, e o
+- **Cuidado:** o alerta é de uma pessoa, sem verificação. Por isso o título diz "potencial" e o relato aparece como não verificado, e o
   alerta só vale por algumas horas (6 h no `GET /alertas`). Só as roupas e os acessórios citados aparecem no alerta; nada disso vai na notificação. Definir se e como
   o grupo verifica esses relatos é decisão pendente com o Observatório.
 
@@ -136,7 +136,7 @@ e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`
 
 1. No repositório, vá em **Settings → Pages**.
 
-2. Em *Branch*, escolha `main` e a pasta `/ (root)`. Clique em **Save**.
+2. Em _Branch_, escolha `main` e a pasta `/ (root)`. Clique em **Save**.
 
 3. Em um ou dois minutos o site fica em `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`.
 
@@ -160,13 +160,13 @@ O `scripts/preparar_dados.py` imprime um relatório de conferência (totais, cé
 
 ## Como os dados entram no mapa
 
-* **Relatos**: enviados pelo chat. Ficam 30 dias no mapa, por célula de cerca de 1 km, nunca num ponto exato. Três sinalizações de “informação falsa” tiram um relato do mapa até a moderação revisar.
+- **Relatos**: enviados pelo chat. Ficam 30 dias no mapa, por célula de cerca de 1 km, nunca num ponto exato. Três sinalizações de “informação falsa” tiram um relato do mapa até a moderação revisar.
 
-* **Percepção**: as 51 respostas da pesquisa. As regiões citadas em texto livre foram ligadas aos bairros da base de B.O. Unesp entrou como Bela Vista; Lago Azul entre Vila Operária, Jardim Primavera e Vila Aparecida; Rodoviária no Jardim Claret. Shopping, cemitério, Av. 40, Av. Brasil, avenida do Fórum e Vila Santo Antônio ficaram fora do mapa por falta de posição confiável.
+- **Percepção**: as 51 respostas da pesquisa. As regiões citadas em texto livre foram ligadas aos bairros da base de B.O. Unesp entrou como Bela Vista; Lago Azul entre Vila Operária, Jardim Primavera e Vila Aparecida; Rodoviária no Jardim Claret. Shopping, cemitério, Av. 40, Av. Brasil, avenida do Fórum e Vila Santo Antônio ficaram fora do mapa por falta de posição confiável.
 
-* **Histórico B.O.**: 683 registros (673 de violência doméstica, 2 feminicídios, 8 tentativas), jan/2025 a abr/2026. O mapa mostra os 524 que têm bairro com coordenada própria. Ficam fora 84 da zona rural, 42 sem bairro, 28 de bairros com coordenada genérica e 5 sem nome de bairro.
+- **Histórico B.O.**: 683 registros (673 de violência doméstica, 2 feminicídios, 8 tentativas), jan/2025 a abr/2026. O mapa mostra os 524 que têm bairro com coordenada própria. Ficam fora 84 da zona rural, 42 sem bairro, 28 de bairros com coordenada genérica e 5 sem nome de bairro.
 
-* **Onde pedir ajuda**: serviços públicos, com endereço exato. É a única camada com pontos exatos, porque são endereços públicos e não expõem ninguém.
+- **Onde pedir ajuda**: serviços públicos, com endereço exato. É a única camada com pontos exatos, porque são endereços públicos e não expõem ninguém.
 
 Violência doméstica acontece sobretudo dentro de casa. Por isso o app apresenta a camada de B.O. como “onde a rede de apoio é mais necessária”, e não como área para evitar na rua.
 
