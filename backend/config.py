@@ -25,6 +25,8 @@ class Configuracoes(BaseSettings):
     pasta_frontend: Path = RAIZ / 'frontend'
     pasta_vendor: Path = RAIZ / 'vendor'
     servir_frontend: bool = True
+    sessao_horas: int = Field(8, ge=1, le=24)
+    sessao_cookie_seguro: bool = False  # True em produção com HTTPS
     cors_origens: list[str] = Field(default_factory=list)
     carga_automatica: bool = True
     relatos_janela_dias: int = Field(30, ge=1, le=3650)

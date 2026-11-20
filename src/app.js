@@ -1326,6 +1326,9 @@ function closeChat() { $('#chat').classList.remove('open'); document.body.style.
 /* ------------------------------------------------------------------ páginas */
 function showView(v) {
   if (v === 'moderacao' && !canModerate()) v = 'mapa';
+  if (location.hash === '#moderacao' && v !== 'moderacao') {
+    history.replaceState(null, '', location.pathname + location.search + (v === 'mapa' ? '' : '#' + v));
+  }
   S.view = v;
   for (const sec of $$('.view')) sec.hidden = sec.id !== 'view-' + v;
   for (const b of $$('[data-view]')) b.classList.toggle('on', b.dataset.view === v);
@@ -1628,14 +1631,20 @@ function boot() {
   Chat.init();
   renderMap();
   Store.on(() => {
-    const modNav = $('[data-modnav]'); if (modNav) modNav.hidden = !canModerate();
     if (!S.userLayer && Store.ready && recentReports().length && S.layer !== 'relatos') { S.layer = 'relatos'; syncControls(); }
     renderMap(); refreshPanel();
     if (S.view === 'dados') renderDados();
     if (S.view === 'alertas') renderAlertas(false);
     if (S.view === 'moderacao') renderMod();
   });
-  Store.init();
+  const abrirRota = () => {
+    const rota = location.hash.slice(1);
+    showView(document.getElementById('view-' + rota) ? rota : 'mapa');
+  };
+  Store.init().then(() => {
+    window.addEventListener('hashchange', abrirRota);
+    if (location.hash) abrirRota();
+  });
   const onTheme = () => renderMap();
   if (mq.addEventListener) mq.addEventListener('change', onTheme);
   new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

@@ -4,7 +4,7 @@ import { CONFIG } from '../config.js';
 export class ApiErro extends Error {
   constructor(message, status = 0, code = 'server') { super(message); this.name = 'ApiErro'; this.status = status; this.code = code; }
 }
-const CODIGOS = { 403: 'forbidden', 404: 'not_found', 422: 'invalid_argument', 429: 'rate_limited' };
+const CODIGOS = { 401: 'unauthorized', 403: 'forbidden', 404: 'not_found', 422: 'invalid_argument', 429: 'rate_limited' };
 async function pedir(method, path, body, headers) {
   const opt = { method, headers: Object.assign({ Accept: 'application/json' }, headers) };
   if (body !== undefined) { opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
@@ -18,6 +18,6 @@ async function pedir(method, path, body, headers) {
   if (res.status === 204) return null;
   try { return await res.json(); } catch (e) { throw new ApiErro('Resposta do servidor em formato inesperado.', res.status, 'server'); }
 }
-export const apiGet = path => pedir('GET', path);
-export const apiPost = (path, body) => pedir('POST', path, body);
+export const apiGet = (path, headers) => pedir('GET', path, undefined, headers);
+export const apiPost = (path, body, headers) => pedir('POST', path, body, headers);
 export const apiDelete = (path, headers) => pedir('DELETE', path, undefined, headers);

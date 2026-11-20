@@ -20,6 +20,7 @@ from backend.database.repositorios import (
     DIA_MS,
     RepositorioClassificacoes,
     RepositorioDados,
+    RepositorioModeracao,
     RepositorioRelatos,
     instante_atual_ms,
 )
@@ -85,7 +86,7 @@ def listar(janela_dias: int | None = Query(None, ge=1, le=3650), sessao: Session
 def obter(relato_id: str, sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends(obter_configuracoes)):
     relato = RepositorioRelatos(sessao).obter(relato_id)
     limite = limite_retencao_ms(cfg, instante_atual_ms())
-    if relato is None or (limite is not None and relato.criado < limite):
+    if relato is None or (limite is not None and relato.criado < limite) or RepositorioModeracao(sessao).oculto(relato_id):
         raise HTTPException(404, 'Relato não encontrado.')
     return {'relato': relato_publico(relato)}
 

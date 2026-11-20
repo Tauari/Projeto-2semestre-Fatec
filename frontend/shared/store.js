@@ -1,13 +1,17 @@
 /* armazenamento: relatos no servidor da Aurora (modo api) ou no aparelho (modo local).
-   Votos, moderação e perfil ficam sempre no aparelho. */
+   Votos e perfil ficam no aparelho; moderação no servidor quando há API. */
 import { CONFIG } from '../config.js';
 import { LS } from './armazenamento-local.js';
 import { MODO_DADOS } from './dados.js';
 import { ApiErro, apiGet, apiPost, apiDelete } from './api.js';
 import { toast } from './dom.js';
 
+const CAB_EQUIPE = { 'X-Aurora-Equipe': '1' };
+let acessoVersao = 0;
+
 export const Store = {
   mode: 'local', ready: false, uid: null, canWrite: true, canEdit: false, papeis: [],
+  moderacao: null,
   reports: new Map(), votes: {}, myVotes: {}, mod: { oculto: {}, verificado: {} },
   perfil: { areas: [], meus: [], visto: 0 },
   subs: new Set(), queues: {}, apagados: new Set(), assinatura: null,
@@ -26,41 +30,36 @@ export const Store = {
     this.loadLocal();
     if (MODO_DADOS !== 'api') { this.ready = true; this.emit(); return; }
     /* os relatos vêm do servidor; os guardados no aparelho não se misturam com eles */
-    this.mode = 'api'; this.reports = new Map();
-    try { const eu = await apiGet('/usuarios/eu'); this.papeis = eu && Array.isArray(eu.papeis) ? eu.papeis : []; } catch (e) { this.papeis = []; }
+    this.mode = 'api'; this.reports = new Map(); this.mod = { oculto: {}, verificado: {} };
+    try { const eu = await apiGet('/usuarios/eu'); if (eu.autenticado) await this.atualizarModeracao(); } catch (e) { this.limparAcesso(); }
     await this.carregarRelatos();
     this.ready = true; this.emit();
     setInterval(() => this.carregarRelatos(), CONFIG.atualizarRelatosSeg * 1e3);
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') this.carregarRelatos(); });
   },
   /* relatos da janela e, fora dela, os que este aparelho enviou; se falhar, fica com o que já tinha */
-  carregarRelatos() {
+  carregarRelatos(emitir = true) {
     return this.queue('relatos', async () => {
       const antes = new Set(this.perfil.meus);
       try {
-        const { relatos } = await apiGet('/relatos');
+        const [{ relatos }, estado] = await Promise.all([apiGet('/relatos'), apiGet('/moderacao/estado')]);
         const m = new Map((relatos || []).map(r => [r.id, r]));
-        /* os seus relatos fora da janela: busca cada um só uma vez por sessão */
+        /* Confere também os antigos: a equipe pode ter ocultado um desde a última leitura. */
         const antigos = this.antigos || (this.antigos = new Map());
-        const faltam = this.perfil.meus.filter(id => !m.has(id) && !antigos.has(id)).slice(-50);
+        const faltam = this.perfil.meus.filter(id => !m.has(id)).slice(-50);
         const extra = await Promise.all(faltam.map(id => apiGet('/relatos/' + encodeURIComponent(id)).then(x => (x && x.relato) || null, e => { if (e && e.status === 404) return null; throw e; })));
         faltam.forEach((id, i) => antigos.set(id, extra[i]));
-        /* o servidor não tem mais (apagado em outra aba ou fora do prazo de retenção): sai de "Meus relatos" e da lista de chaves */
-        const sumidos = faltam.filter((id, i) => extra[i] === null);
-        if (sumidos.length) {
-          const chaves = LS.get('chaves', {});
-          for (const id of sumidos) { this.apagados.add(id); delete chaves[id]; }
-          LS.set('chaves', chaves);
-          this.perfil.meus = this.perfil.meus.filter(id => !this.apagados.has(id)); this.savePerfil();
-        }
+        /* 404 também pode ser ocultação temporária. Mantém a chave de exclusão e a autoria
+           no aparelho; só uma exclusão explícita entra em apagados. */
         for (const id of this.perfil.meus) { const r = antigos.get(id); if (r && !m.has(id)) m.set(id, r); }
         /* relato publicado enquanto a lista carregava; e o apagado nesse meio-tempo não volta */
         for (const id of this.perfil.meus) if (!antes.has(id) && !m.has(id) && this.reports.has(id)) m.set(id, this.reports.get(id));
         for (const id of this.apagados) m.delete(id);
         this.reports = m;
         /* só redesenha se algo mudou (senão a releitura desfaria uma confirmação ou a rolagem do painel) */
-        const assinatura = JSON.stringify([...m.values()]);
-        if (assinatura !== this.assinatura) { this.assinatura = assinatura; this.emit(); }
+        this.mod = { oculto: {}, verificado: estado.verificado || {} };
+        const assinatura = JSON.stringify([[...m.values()], this.mod]);
+        if (assinatura !== this.assinatura) { this.assinatura = assinatura; if (emitir) this.emit(); }
       } catch (e) { console.warn('relatos:', e && e.code); }
     });
   },
@@ -97,7 +96,43 @@ export const Store = {
     if (mine[id] === v) delete mine[id]; else mine[id] = v;
     this.myVotes = mine; this.votes = this.localVoteCounts(mine); LS.set('votos', mine); this.emit();
   },
+  async entrarModeracao(login, senha) {
+    await apiPost('/usuarios/entrar', { login, senha }, CAB_EQUIPE);
+    await this.atualizarModeracao();
+  },
+  limparAcesso() {
+    acessoVersao++; this.moderacao = null; this.papeis = []; this.emit();
+  },
+  async sairModeracao() {
+    await apiPost('/usuarios/sair', undefined, CAB_EQUIPE);
+    this.limparAcesso();
+  },
+  async atualizarModeracao(emitir = true) {
+    const versao = acessoVersao;
+    try {
+      const dados = await apiGet('/moderacao');
+      if (versao !== acessoVersao) return;
+      this.moderacao = dados;
+      this.papeis = dados.usuario.papel === 'administrador' ? ['administrador', 'moderacao'] : ['moderacao'];
+      if (emitir) this.emit();
+    } catch (e) {
+      if (versao === acessoVersao && [401, 403].includes(e.status)) this.limparAcesso();
+      throw e;
+    }
+  },
   async setMod(id, key, on) {
+    if (this.mode === 'api') {
+      if (!this.moderacao) throw new ApiErro('Entre novamente para moderar.', 401, 'unauthorized');
+      try {
+        await apiPost('/moderacao/' + encodeURIComponent(id), { campo: key, valor: on }, CAB_EQUIPE);
+        await Promise.all([this.atualizarModeracao(false), this.carregarRelatos(false)]);
+        this.emit();
+      } catch (e) {
+        if ([401, 403].includes(e.status)) this.limparAcesso();
+        throw e;
+      }
+      return;
+    }
     const m = { oculto: Object.assign({}, this.mod.oculto), verificado: Object.assign({}, this.mod.verificado) };
     if (on) m[key][id] = true; else delete m[key][id];
     this.mod = m; LS.set('mod', m); this.emit();

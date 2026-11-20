@@ -31,7 +31,7 @@ def test_config_formato(cliente):
     assert cfg['ia'] == {'provedor': 'heuristica', 'usa_modelo': False}
     assert cfg['conjuntos_padrao'] == {'dado_oficial': 'bo-ssp-2025-2026', 'percepcao': 'pesquisa-percepcao-2026'}
     assert cfg['modulos'] == {'relatos': True, 'apoio': True, 'dados_oficiais': True, 'percepcao': True, 'dashboard': True,
-                              'ia': True, 'moderacao': False, 'usuarios': False, 'relatorios': False}
+                              'ia': True, 'moderacao': True, 'usuarios': True, 'relatorios': True}
 
 
 def test_config_vocabulario_na_ordem_do_backend(cliente):
@@ -85,12 +85,6 @@ def test_usuarios_eu(cliente):
     assert r.status_code == 200
     assert r.json() == {'autenticado': False, 'papeis': []}
 
-
-@pytest.mark.parametrize('metodo', ['GET', 'POST', 'DELETE'])
-def test_moderacao_501(cliente, metodo):
-    r = cliente.request(metodo, API + '/moderacao')
-    assert r.status_code == 501
-    assert r.json() == {'detail': 'A moderação ainda não foi migrada para o servidor. Nesta fase ela continua local, no aparelho.'}
 
 
 def test_ia_provedor(cliente):

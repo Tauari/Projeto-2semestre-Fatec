@@ -11,7 +11,7 @@ import { configurarGrade } from './shared/grade.js';
 import { configurarBairros } from './shared/bairros.js';
 import { S } from './shared/estado.js';
 import { Store } from './shared/store.js';
-import { showView } from './shared/navegacao.js';
+import { showView, instalarNavegacao } from './shared/navegacao.js';
 import { openSobre, closeSobre } from './shared/sobre.js';
 import { quickExit, instalarAtalhos } from './shared/saida-rapida.js';
 import { initMap, renderMap, setLayer } from './mapa/mapa.js';
@@ -26,7 +26,7 @@ import { recentReports } from './relatos/relatos.js';
 import { renderAlertas } from './relatos/alertas.js';
 import { Chat, relatar, closeChat } from './chatbot/chat.js';
 import { renderDados } from './dashboard/dados-pesquisa.js';
-import { canModerate, renderMod } from './moderacao/moderacao.js';
+import { renderMod } from './moderacao/moderacao.js';
 
 /* ------------------------------------------------------------------ inicialização */
 export function boot() {
@@ -62,7 +62,6 @@ export function boot() {
   Chat.init();
   renderMap();
   Store.on(() => {
-    const modNav = $('[data-modnav]'); if (modNav) modNav.hidden = !canModerate();
     if (!S.userLayer && Store.ready && recentReports().length && S.layer !== 'relatos') { S.layer = 'relatos'; syncControls(); }
     renderMap(); refreshPanel();
     if (S.view === 'dados') renderDados();
@@ -70,6 +69,7 @@ export function boot() {
     if (S.view === 'moderacao') renderMod();
   });
   Store.init();
+  instalarNavegacao();
   const tema = LS.get('tema', null); if (tema) document.documentElement.setAttribute('data-theme', tema); // escolha da pessoa vale mais que a do aparelho
   $('#btnTema').onclick = () => { const t = isDark() ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); LS.set('tema', t); };
   const onTheme = () => renderMap();

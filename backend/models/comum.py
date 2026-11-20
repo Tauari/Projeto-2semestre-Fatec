@@ -6,6 +6,8 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from backend.models.equipe import ContaPublica
+
 _RE_SUBSTITUTO = re.compile('[\ud800-\udfff]')
 
 
@@ -25,7 +27,9 @@ class Saude(BaseModel):
     versao: str
 
 
+
 class Identidade(BaseModel):
+    usuario: ContaPublica | None = None
     autenticado: bool
     papeis: list[str]
 
