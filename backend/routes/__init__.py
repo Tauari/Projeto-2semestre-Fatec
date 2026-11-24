@@ -9,13 +9,28 @@ from backend.routes import (
     ia,
     mapa,
     moderacao,
+    observatorio,
     push,
     relatos,
     sistema,
     usuarios,
 )
 
-ROTAS = (sistema.router, mapa.router, relatos.router, dados_oficiais.router, dados_percepcao.router, dashboard.router,
-         ia.router, moderacao.router, apoio.router, usuarios.router, analise.router, push.router, alertas.router)
+ROTAS = (
+    sistema.router,
+    mapa.router,
+    relatos.router,
+    dados_oficiais.router,
+    dados_percepcao.router,
+    dashboard.router,
+    ia.router,
+    moderacao.router,
+    apoio.router,
+    usuarios.router,
+    analise.router,
+    push.router,
+    alertas.router,
+    observatorio.router,
+)
 
 __all__ = ['ROTAS']
