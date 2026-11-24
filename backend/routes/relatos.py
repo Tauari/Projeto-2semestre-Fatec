@@ -32,6 +32,7 @@ from backend.services.enderecos import anonimizar_completo
 from backend.services.ia import ContextoIA, obter_provedor
 from backend.services.push import notificar_relato
 from backend.services.retencao import aplicar_retencao, limite_retencao_ms
+from backend.services.telegram import notificar_telegram
 from backend.services.texto import fatiar_js
 
 log = logging.getLogger('aurora.relatos')
@@ -109,6 +110,7 @@ def criar(entrada: RelatoEntrada, tarefas: BackgroundTasks, sessao: Session = De
         _classificar(sessao, relato, limpo.texto, cfg)
     # o token só serve para não avisar o aparelho de quem enviou: não é guardado junto do relato
     tarefas.add_task(notificar_relato, relato.id, token_push)
+    tarefas.add_task(notificar_telegram, relato.id)
     return {'relato': publico, 'chave_exclusao': chave, 'anonimizacao': {'removidos': limpo.removidos}}
 
 

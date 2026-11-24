@@ -53,6 +53,11 @@ class Configuracoes(BaseSettings):
     push_url: str = 'https://exp.host/--/api/v2/push/send'
     push_intervalo_min: int = Field(10, ge=0)  # no máximo uma notificação por aparelho a cada tanto tempo
     push_timeout_s: float = Field(10.0, gt=0)
+    # aviso no Telegram para a patrulha a cada relato novo; sem token e sem chat, fica desligado
+    telegram_bot_token: SecretStr | None = None
+    telegram_chat_ids: str = ''  # ids dos chats/grupos, separados por vírgula
+    telegram_url: str = 'https://api.telegram.org'
+    telegram_timeout_s: float = Field(10.0, gt=0)
 
 
 @lru_cache

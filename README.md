@@ -122,6 +122,10 @@ e assim por diante (`backend/services/alertas.py` e `frontend/relatos/alerta.js`
 - **No celular:** quem acompanha uma área ("Acompanhar" no mapa) recebe uma notificação quando alguém relata algo nela, pelo app de
   `mobile/` (Expo Push). A notificação traz só o título padrão e o nome da área, nunca a descrição. Limite de uma por aparelho a cada
   10 minutos. O servidor guarda só o token do aparelho e as áreas (tabela `dispositivos_push`).
+- **Telegram da patrulha:** com `AURORA_TELEGRAM_BOT_TOKEN` e `AURORA_TELEGRAM_CHAT_IDS` preenchidos (`.env` ou segredos do Render), cada relato
+  novo, de qualquer tipo, vira uma mensagem no(s) grupo(s) do Telegram: título, área, ocorrência, quando, link do mapa e a descrição já limpa pela
+  anonimização (`backend/services/telegram.py`). O ponto é o centro da célula de ~150 m, não o endereço exato. Sem os dois, fica desligado.
+  Para criar: fale com o @BotFather (`/newbot`), adicione o bot ao grupo da patrulha e pegue o id do grupo.
 - **Modo atenção (app fechado):** quem liga em *Meus alertas* recebe uma notificação quando surge um alerta a até 500 m, mesmo com o app
   fechado. O app baixa `GET /api/v1/alertas` e compara com o GPS **no próprio celular**: a localização não vai para o servidor.
   Detalhes e ajustes de bateria (Xiaomi) em `mobile/README.md`.
