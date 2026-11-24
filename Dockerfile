@@ -1,18 +1,17 @@
-FROM python:3.11-slim
+# Imagem do servidor do Aurora (API + site). O banco NÃO fica na imagem: vem de AURORA_BANCO_URL (Postgres na nuvem).
+FROM python:3.12-slim
 
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 
-# Desabilita buffer de saída do Python para logs em tempo real
-ENV PYTHONUNBUFFERED=1
+COPY backend/requirements.txt backend/requirements.txt
+RUN pip install --no-cache-dir -r backend/requirements.txt
 
-# Copia o arquivo a partir da pasta backend/
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copia todo o código do projeto
-COPY . .
+COPY backend backend
+COPY frontend frontend
+COPY vendor vendor
+COPY dados dados
 
 EXPOSE 8000
-
-# Executa o servidor backend servindo a API e o Frontend estático
-CMD ["python", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# a hospedagem define PORT; sem ele, 8000. --no-access-log: o servidor não grava o IP de quem acessa
+CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} --no-access-log"]

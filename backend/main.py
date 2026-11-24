@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.routing import Match, Mount
@@ -163,14 +163,8 @@ def create_app() -> FastAPI:
     app.add_middleware(LimiteDeCorpo, limite=cfg.limite_corpo_bytes)
     
     if cfg.cors_origens:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=cfg.cors_origens,
-            allow_methods=['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
-            allow_headers=['Content-Type', 'X-Chave-Exclusao', 'Authorization']
-        )
-        
-    # Inclui todas as rotas (Relatos, IA/Chatbot, Boletins, Observatório e Usuários/Admin)
+        app.add_middleware(CORSMiddleware, allow_origins=cfg.cors_origens, allow_methods=['GET', 'POST', 'DELETE'],
+                           allow_headers=['Content-Type', 'X-Chave-Exclusao', 'X-Aurora-Equipe'])
     for rota in ROTAS:
         app.include_router(rota, prefix=PREFIXO_API)
         
@@ -179,9 +173,13 @@ def create_app() -> FastAPI:
         if vendor.is_dir():
             app.mount('/vendor', StaticFiles(directory=vendor), name='vendor')
         if frontend.is_dir():
-            app.router.routes.append(
-                _MontagemFrontend('/', app=_EstaticosSemCache(directory=frontend, html=True), name='frontend')
-            )
+            @app.get('/moderacao', include_in_schema=False)
+            @app.get('/moderacao/', include_in_schema=False)
+            def pagina_moderacao():
+                return RedirectResponse('/#moderacao')
+
+            # por último: "/" casa com tudo o que as rotas acima não pegaram
+            app.router.routes.append(_MontagemFrontend('/', app=_EstaticosSemCache(directory=frontend, html=True), name='frontend'))
     return app
 
 

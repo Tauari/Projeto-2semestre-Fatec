@@ -44,10 +44,11 @@ class RepositorioRelatos:
     def obter(self, relato_id: str) -> Relato | None:
         return self.sessao.get(Relato, relato_id)
 
-    def listar_desde(self, desde_ms: int) -> list[Relato]:
+    def listar_desde(self, desde_ms: int, *, incluir_ocultos: bool = False) -> list[Relato]:
         """Relatos criados a partir de ``desde_ms``, do mais novo para o mais antigo."""
-        # a moderação no servidor ainda não existe: quando existir, os relatos ocultados saem aqui
         consulta = select(Relato).where(Relato.criado >= desde_ms).order_by(Relato.criado.desc(), Relato.id)
+        if not incluir_ocultos:
+            consulta = consulta.where(Relato.id.not_in(RepositorioModeracao.ids_ocultos()))
         return list(self.sessao.scalars(consulta))
 
     def apagar(self, relato_id: str) -> bool:
@@ -178,3 +179,37 @@ def dados_completos(conjunto: ConjuntoReferencia | ConjuntoOficial | ConjuntoPer
     elif conjunto.tipo == 'rede_apoio' and 'pontos' in dados and dados['pontos'] is None:
         dados['pontos'] = [p.dados for p in conjunto.pontos]
     return dados
+
+
+class RepositorioModeracao:
+    ACOES = {'oculto': ('mostrar', 'ocultar'), 'verificado': ('desverificar', 'verificar')}
+
+    def __init__(self, sessao: Session):
+        self.sessao = sessao
+
+    @staticmethod
+    def ids_ocultos():
+        ultimas = (select(func.max(AcaoModeracao.id)).where(AcaoModeracao.acao.in_(['ocultar', 'mostrar']))
+                   .group_by(AcaoModeracao.relato_id))
+        return select(AcaoModeracao.relato_id).where(AcaoModeracao.id.in_(ultimas), AcaoModeracao.acao == 'ocultar')
+
+    def oculto(self, relato_id: str) -> bool:
+        return self.sessao.scalar(select(Relato.id).where(Relato.id == relato_id, Relato.id.in_(self.ids_ocultos()))) is not None
+
+    def estado(self, ids: list[str]) -> dict:
+        estado = {'oculto': {}, 'verificado': {}}
+        if not ids:
+            return estado
+        acoes = self.sessao.scalars(select(AcaoModeracao).where(AcaoModeracao.relato_id.in_(ids)).order_by(AcaoModeracao.id))
+        for acao in acoes:
+            for campo, nomes in self.ACOES.items():
+                if acao.acao == nomes[1]:
+                    estado[campo][acao.relato_id] = True
+                elif acao.acao == nomes[0]:
+                    estado[campo].pop(acao.relato_id, None)
+        return estado
+
+    def registrar(self, relato_id: str, campo: str, valor: bool, usuario_id: str) -> None:
+        self.sessao.add(AcaoModeracao(relato_id=relato_id, usuario_id=usuario_id,
+                                     acao=self.ACOES[campo][int(valor)], criado_em=instante_atual_ms()))
+        self.sessao.flush()

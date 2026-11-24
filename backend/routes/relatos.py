@@ -20,6 +20,7 @@ from backend.database.repositorios import (
     DIA_MS,
     RepositorioClassificacoes,
     RepositorioDados,
+    RepositorioModeracao,
     RepositorioRelatos,
     instante_atual_ms,
 )
@@ -32,6 +33,7 @@ from backend.services.enderecos import anonimizar_completo
 from backend.services.ia import ContextoIA, obter_provedor
 from backend.services.push import notificar_relato
 from backend.services.retencao import aplicar_retencao, limite_retencao_ms
+from backend.services.telegram import notificar_telegram
 from backend.services.texto import fatiar_js
 
 log = logging.getLogger('aurora.relatos')
@@ -86,7 +88,7 @@ def listar(janela_dias: int | None = Query(None, ge=1, le=3650), sessao: Session
 def obter(relato_id: str, sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends(obter_configuracoes)):
     relato = RepositorioRelatos(sessao).obter(relato_id)
     limite = limite_retencao_ms(cfg, instante_atual_ms())
-    if relato is None or (limite is not None and relato.criado < limite):
+    if relato is None or (limite is not None and relato.criado < limite) or RepositorioModeracao(sessao).oculto(relato_id):
         raise HTTPException(404, 'Relato não encontrado.')
     return {'relato': relato_publico(relato)}
 
@@ -109,6 +111,7 @@ def criar(entrada: RelatoEntrada, tarefas: BackgroundTasks, sessao: Session = De
         _classificar(sessao, relato, limpo.texto, cfg)
     # o token só serve para não avisar o aparelho de quem enviou: não é guardado junto do relato
     tarefas.add_task(notificar_relato, relato.id, token_push)
+    tarefas.add_task(notificar_telegram, relato.id)
     return {'relato': publico, 'chave_exclusao': chave, 'anonimizacao': {'removidos': limpo.removidos}}
 
 

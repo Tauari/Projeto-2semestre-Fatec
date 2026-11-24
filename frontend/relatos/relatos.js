@@ -18,6 +18,6 @@ export function cleanReport(r) {
   };
 }
 export function allReports() { const out = []; for (const r of Store.reports.values()) { const c = cleanReport(r); if (c) out.push(c); } return out.sort((a, b) => b.criado - a.criado); }
-export function isHidden(r) { if (Store.mod.verificado[r.id]) return false; if (Store.mod.oculto[r.id]) return true; const v = Store.votes[r.id]; return !!(v && v.f >= 3); }
+export function isHidden(r) { if (Store.mod.oculto[r.id]) return true; if (Store.mod.verificado[r.id]) return false; const v = Store.votes[r.id]; return !!(v && v.f >= 3); }
 export function recentReports() { const lim = Date.now() - CONFIG.janelaDias * DAY; return allReports().filter(r => r.criado >= lim && !isHidden(r)); }
 export function filteredReports() { return recentReports().filter(r => periodOk(r) && (S.tipo === 'todos' || r.tipos.includes(S.tipo))); }

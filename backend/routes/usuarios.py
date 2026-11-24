@@ -1,160 +1,116 @@
-# Identidade e autenticação de usuários da Aurora.
-# Controla acesso por rota para garantir que SOMENTE administradores autorizados tenham acesso aos dados restritos do Observatório e Secretaria da Mulher.
-
-from __future__ import annotations
-
+"""Acesso e gestão da equipe. Quem envia relatos continua anônimo."""
 import secrets
-from typing import Any
-from fastapi import APIRouter, Header, HTTPException, status
-from pydantic import BaseModel, Field
+import threading
+import time
 
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
+
+from backend.config import Configuracoes, obter_configuracoes
+from backend.database.repositorios import instante_atual_ms
+from backend.database.sessao import obter_sessao
+from backend.database.tabelas import CredencialEquipe, SessaoEquipe, Usuario
 from backend.models.comum import Identidade
+from backend.models.equipe import AcessoEquipe, AtividadeConta, ContaPublica, NovaConta
+from backend.services.autorizacao import COOKIE_EQUIPE, exigir_admin, exigir_origem, hash_token, usuario_da_sessao
+from backend.services.equipe import HASH_INEXISTENTE, conta_publica, criar_conta, senha_correta
 
 router = APIRouter(tags=['usuários'])
-
-# Tokens administrativos válidos em memória (persistidos na sessão do servidor)
-_TOKENS_ADMIN: set[str] = {
-    "aurora_admin_token_master_2026",
-    "aurora_token_observatorio_secretaria_mulher",
-}
-
-# Credenciais institucionais autorizadas (Administração / Observatório / Secretaria da Mulher)
-_USUARIOS_ADMIN = {
-    "admin": {
-        "senha": "admin",
-        "nome": "Administrador Geral",
-        "cargo": "Administrador do Sistema",
-        "orgao": "Prefeitura de Rio Claro / Observatório",
-        "matricula": "ADM-001-RC",
-        "papeis": ["admin", "observatorio", "secretaria_mulher"]
-    },
-    "admin_observatorio": {
-        "senha": "aurora2026",
-        "nome": "Dra. Helena Martins",
-        "cargo": "Coordenadora do Observatório de Segurança",
-        "orgao": "Observatório de Segurança de Rio Claro",
-        "matricula": "OBS-2026-042",
-        "papeis": ["admin", "observatorio"]
-    },
-    "secretaria_mulher": {
-        "senha": "aurora2026",
-        "nome": "Valéria Santos, MSW",
-        "cargo": "Assistente Social Coordenadora",
-        "orgao": "Secretaria Municipal da Mulher de Rio Claro",
-        "matricula": "SEC-MULHER-109",
-        "papeis": ["admin", "secretaria_mulher"]
-    }
-}
+_lock_login = threading.Lock()
 
 
-class CredenciaisLogin(BaseModel):
-    login: str = Field(..., description="E-mail funcional ou usuário administrativo")
-    senha: str = Field(..., description="Senha de acesso restrito")
+def _limitar_login(request: Request, login: str):
+    """10 tentativas por login/5 min e 60 totais/min por processo, sem armazenar IP."""
+    agora = time.monotonic()
+    with _lock_login:
+        estado = getattr(request.app.state, 'tentativas_login', {})
+        estado = {k: (inicio, n) for k, (inicio, n) in estado.items() if agora - inicio < (60 if k == '*' else 300)}
+        chave = hash_token(login)
+        for k, limite in (('*', 60), (chave, 10)):
+            if estado.get(k, (agora, 0))[1] >= limite:
+                raise HTTPException(429, 'Muitas tentativas. Aguarde alguns minutos e tente novamente.', headers={'Retry-After': '300'})
+        for k in ('*', chave):
+            inicio, n = estado.get(k, (agora, 0))
+            estado[k] = inicio, n + 1
+        request.app.state.tentativas_login = estado
 
 
-class RespostaLogin(BaseModel):
-    autenticado: bool
-    token: str
-    usuario: str
-    nome: str
-    cargo: str
-    orgao: str
-    matricula: str
-    papeis: list[str]
+@router.get('/usuarios/eu', response_model=Identidade, response_model_exclude_none=True)
+def eu(response: Response, usuario: Usuario | None = Depends(usuario_da_sessao), sessao: Session = Depends(obter_sessao)):
+    response.headers['Cache-Control'] = 'no-store'
+    if usuario is None:
+        return {'autenticado': False, 'papeis': []}
+    return {'autenticado': True, 'papeis': ['administrador', 'moderacao'] if usuario.papel == 'administrador' else ['moderacao'],
+            'usuario': conta_publica(sessao, usuario)}
 
 
-class IdentidadeCompleta(BaseModel):
-    autenticado: bool
-    papeis: list[str]
-    usuario: str | None = None
-    nome: str | None = None
-    cargo: str | None = None
-    orgao: str | None = None
+@router.post('/usuarios/entrar', response_model=ContaPublica, dependencies=[Depends(exigir_origem)])
+def entrar(entrada: AcessoEquipe, request: Request, response: Response, sessao: Session = Depends(obter_sessao),
+           cfg: Configuracoes = Depends(obter_configuracoes)):
+    _limitar_login(request, entrada.login)
+    credencial = sessao.scalar(select(CredencialEquipe).where(CredencialEquipe.login == entrada.login))
+    correta = senha_correta(entrada.senha.get_secret_value(), credencial.senha_hash if credencial else HASH_INEXISTENTE)
+    usuario = sessao.get(Usuario, credencial.usuario_id) if credencial else None
+    if not correta or usuario is None or not usuario.ativo:
+        raise HTTPException(401, 'Usuário ou senha inválidos.')
+    agora = instante_atual_ms()
+    sessao.execute(delete(SessaoEquipe).where(SessaoEquipe.expira_em <= agora))
+    anterior = request.cookies.get(COOKIE_EQUIPE)
+    if anterior:
+        sessao.execute(delete(SessaoEquipe).where(SessaoEquipe.token_hash == hash_token(anterior)))
+    token = secrets.token_urlsafe(32)
+    duracao = cfg.sessao_horas * 3600
+    sessao.add(SessaoEquipe(token_hash=hash_token(token), usuario_id=usuario.id, expira_em=agora + duracao * 1000))
+    sessao.commit()
+    response.set_cookie(COOKIE_EQUIPE, token, max_age=duracao, httponly=True, secure=cfg.sessao_cookie_seguro,
+                        samesite='strict', path='/api/v1')
+    response.headers['Cache-Control'] = 'no-store'
+    return conta_publica(sessao, usuario)
 
 
-def extrair_token(authorization: str | None, x_admin_token: str | None) -> str | None:
-    """Extrai token do cabeçalho Authorization (Bearer) ou X-Admin-Token."""
-    if authorization:
-        partes = authorization.strip().split()
-        if len(partes) == 2 and partes[0].lower() == "bearer":
-            return partes[1]
-        return authorization.strip()
-    if x_admin_token:
-        return x_admin_token.strip()
-    return None
+@router.post('/usuarios/sair', status_code=204, dependencies=[Depends(exigir_origem)])
+def sair(request: Request, sessao: Session = Depends(obter_sessao), cfg: Configuracoes = Depends(obter_configuracoes)):
+    token = request.cookies.get(COOKIE_EQUIPE)
+    if token:
+        sessao.execute(delete(SessaoEquipe).where(SessaoEquipe.token_hash == hash_token(token)))
+        sessao.commit()
+    response = Response(status_code=204, headers={'Cache-Control': 'no-store'})
+    response.delete_cookie(COOKIE_EQUIPE, path='/api/v1', httponly=True, secure=cfg.sessao_cookie_seguro, samesite='strict')
+    return response
 
 
-def validar_token_admin(token: str | None) -> bool:
-    """Verifica se o token informado pertence a um administrador ativo."""
-    if not token:
-        return False
-    return token in _TOKENS_ADMIN
+@router.get('/usuarios/equipe', response_model=list[ContaPublica], dependencies=[Depends(exigir_admin)])
+def listar(response: Response, sessao: Session = Depends(obter_sessao)):
+    response.headers['Cache-Control'] = 'no-store'
+    usuarios = sessao.scalars(select(Usuario).join(CredencialEquipe).order_by(CredencialEquipe.login))
+    return [conta_publica(sessao, u) for u in usuarios]
 
 
-@router.post('/usuarios/login', response_model=RespostaLogin)
-def login(dados: CredenciaisLogin):
-    """Autenticação restrita para administradores do Observatório e Secretaria da Mulher."""
-    login_limpo = dados.login.strip().lower()
-    usuario_info = _USUARIOS_ADMIN.get(login_limpo)
-
-    if not usuario_info or usuario_info["senha"] != dados.senha:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciais inválidas. Acesso restrito a profissionais autorizados.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    novo_token = f"aurora_admin_{secrets.token_hex(16)}"
-    _TOKENS_ADMIN.add(novo_token)
-
-    return {
-        "autenticado": True,
-        "token": novo_token,
-        "usuario": login_limpo,
-        "nome": usuario_info["nome"],
-        "cargo": usuario_info["cargo"],
-        "orgao": usuario_info["orgao"],
-        "matricula": usuario_info["matricula"],
-        "papeis": usuario_info["papeis"]
-    }
+@router.post('/usuarios/equipe', status_code=201, response_model=ContaPublica, dependencies=[Depends(exigir_admin)])
+def cadastrar(entrada: NovaConta, response: Response, sessao: Session = Depends(obter_sessao)):
+    response.headers['Cache-Control'] = 'no-store'
+    try:
+        usuario = criar_conta(sessao, entrada)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from None
+    return conta_publica(sessao, usuario)
 
 
-@router.post('/usuarios/logout')
-def logout(
-    authorization: str | None = Header(None, alias="Authorization"),
-    x_admin_token: str | None = Header(None, alias="X-Admin-Token")
-):
-    """Encerra a sessão administrativa revogando o token."""
-    token = extrair_token(authorization, x_admin_token)
-    if token and token in _TOKENS_ADMIN and not token.startswith("aurora_admin_token_master"):
-        _TOKENS_ADMIN.discard(token)
-    return {"status": "sessao_encerrada"}
-
-
-@router.get('/usuarios/eu', response_model=IdentidadeCompleta)
-def eu(
-    authorization: str | None = Header(None, alias="Authorization"),
-    x_admin_token: str | None = Header(None, alias="X-Admin-Token")
-):
-    """Retorna o estado de autenticação de quem requisita.
-    
-    Somente usuários com token de administrador válido recebem autenticado=True e seus papéis.
-    """
-    token = extrair_token(authorization, x_admin_token)
-    if validar_token_admin(token):
-        return {
-            "autenticado": True,
-            "papeis": ["admin", "observatorio", "secretaria_mulher"],
-            "usuario": "admin_observatorio",
-            "nome": "Equipe Observatório & Secretaria da Mulher",
-            "cargo": "Gestor(a) de Dados e Políticas Públicas",
-            "orgao": "Observatório de Segurança / Secretaria da Mulher de Rio Claro"
-        }
-    return {
-        "autenticado": False,
-        "papeis": [],
-        "usuario": None,
-        "nome": None,
-        "cargo": None,
-        "orgao": None
-    }
+@router.post('/usuarios/equipe/{usuario_id}/ativo', response_model=ContaPublica)
+def atividade(usuario_id: str, entrada: AtividadeConta, response: Response,
+              admin: Usuario = Depends(exigir_admin), sessao: Session = Depends(obter_sessao)):
+    response.headers['Cache-Control'] = 'no-store'
+    usuario = sessao.get(Usuario, usuario_id)
+    if usuario is None or sessao.get(CredencialEquipe, usuario_id) is None:
+        raise HTTPException(404, 'Conta não encontrada.')
+    if usuario.id == admin.id:
+        raise HTTPException(409, 'Você não pode desativar sua própria conta.')
+    # Administradores só podem ser desativados pelo operador do servidor: evita a corrida do último admin.
+    if usuario.papel == 'administrador' and not entrada.ativo:
+        raise HTTPException(409, 'Contas administradoras não podem ser desativadas pelo painel.')
+    usuario.ativo = entrada.ativo
+    if not usuario.ativo:
+        sessao.execute(delete(SessaoEquipe).where(SessaoEquipe.usuario_id == usuario.id))
+    sessao.commit()
+    return conta_publica(sessao, usuario)

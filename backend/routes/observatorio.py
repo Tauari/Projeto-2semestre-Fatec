@@ -17,8 +17,9 @@ from backend.models.observatorio import (
     RelatorioRetornoSaida,
     RespostaObservatorio,
 )
-from backend.routes.usuarios import extrair_token, validar_token_admin
-from backend.services.relatorio import (
+from backend.database.tabelas import Usuario
+from backend.services.autorizacao import exigir_admin as exigir_admin_equipe
+from backend.services.relatorio_observatorio import (
     adicionar_despacho,
     exportar_csv_observatorio,
     obter_relatorio_observatorio,
@@ -32,27 +33,12 @@ router = APIRouter(prefix="/observatorio", tags=["observatório"])
 _CASOS_DESBLOQUEADOS_SIGILO: set[str] = set()
 
 
-def exigir_admin(
-    authorization: str | None = Header(None, alias="Authorization"),
-    x_admin_token: str | None = Header(None, alias="X-Admin-Token"),
-) -> dict[str, Any]:
-    """Dependência de segurança por rota:
-    Garante que SOMENTE administradores autenticados possam acessar qualquer dado do Observatório.
-    Rejeita requisições anônimas ou de usuários comuns com HTTP 403 Forbidden.
+def exigir_admin(conta: Usuario = Depends(exigir_admin_equipe)) -> dict[str, Any]:
+    """Só a equipe com login (papel administrador) vê o Observatório. Sem sessão: 401; sem permissão: 403.
+
+    O login é o da equipe (``/usuarios/entrar``, cookie HttpOnly); não há senha nem token fixo no código.
     """
-    token = extrair_token(authorization, x_admin_token)
-    if not validar_token_admin(token):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acesso restrito. Somente administradores autorizados do Observatório e Secretaria da Mulher podem acessar estes dados.",
-        )
-    return {
-        "usuario": "admin_observatorio",
-        "nome": "Coordenadoria Observatório / Secretaria da Mulher",
-        "cargo": "Técnica Especializada / Gestora de Dados",
-        "email": "observatorio.seguranca@mulher.rioclaro.sp.gov.br",
-        "papeis": ["admin", "observatorio", "secretaria_mulher"],
-    }
+    return {'usuario': conta.id, 'nome': 'Equipe Aurora', 'cargo': 'Administração', 'papeis': ['admin']}
 
 
 @router.get(

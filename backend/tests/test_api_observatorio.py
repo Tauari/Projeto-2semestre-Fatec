@@ -3,23 +3,36 @@ from __future__ import annotations
 import pytest
 
 API = '/api/v1'
+CAB = {'X-Aurora-Equipe': '1'}
+SENHA = 'senha-ficticia-para-os-testes'
 
 
-def test_rotas_bloqueadas_para_nao_admins(cliente):
-    """Garante bloqueio por rota: anônimos e usuários sem privilégios recebem HTTP 403."""
+@pytest.fixture
+def admin(cliente):
+    """Cliente já logado como administrador da equipe (cookie de sessão); o Observatório usa esse login."""
+    from backend.database import sessao as banco
+    from backend.services.equipe import criar_primeiro_admin
+    with banco.SessionLocal() as s:
+        criar_primeiro_admin(s, 'responsavel', SENHA)
+    r = cliente.post(API + '/usuarios/entrar', json={'login': 'responsavel', 'senha': SENHA}, headers=CAB)
+    assert r.status_code == 200, r.text
+    return cliente
+
+
+def test_rotas_bloqueadas_sem_login(cliente):
+    """Sem login da equipe, toda rota do Observatório responde 401."""
     # Relatórios do Observatório
     r_rel = cliente.get(f'{API}/observatorio/relatorios')
-    assert r_rel.status_code == 403
-    assert 'Acesso restrito' in r_rel.json()['detail']
+    assert r_rel.status_code == 401
 
     # Retornos da Secretaria
     r_ret = cliente.get(f'{API}/observatorio/retornos')
-    assert r_ret.status_code == 403
-    assert 'Acesso restrito' in r_ret.json()['detail']
+    assert r_ret.status_code == 401
 
     # Registros de Despacho
     r_dsp = cliente.post(
         f'{API}/observatorio/retornos/ret-01/despachos',
+        headers=CAB,
         json={
             'orgao': 'Secretaria da Mulher',
             'status_novo': 'em_acompanhamento',
@@ -27,54 +40,42 @@ def test_rotas_bloqueadas_para_nao_admins(cliente):
             'encaminhamentos': ['CAM']
         }
     )
-    assert r_dsp.status_code == 403
+    assert r_dsp.status_code == 401
 
     # Desbloqueio LGPD
     r_sig = cliente.post(
         f'{API}/observatorio/retornos/ret-01/desbloquear-sigilo',
         json={'justificativa': 'Necessidade de intimação urgente.'}
     )
-    assert r_sig.status_code == 403
+    assert r_sig.status_code == 401
 
     # Exportação de Dados
     r_csv = cliente.get(f'{API}/observatorio/exportar/csv')
-    assert r_csv.status_code == 403
+    assert r_csv.status_code == 401
 
     r_pdf = cliente.get(f'{API}/observatorio/exportar/pdf')
-    assert r_pdf.status_code == 403
+    assert r_pdf.status_code == 401
 
 
-def test_login_admin_concede_acesso(cliente):
-    """Testa autenticação de credenciais administrativas."""
-    # Falha com senha errada
-    r_erro = cliente.post(
-        f'{API}/usuarios/login',
-        json={'login': 'admin_observatorio', 'senha': 'senha_errada'}
-    )
-    assert r_erro.status_code == 401
-
-    # Sucesso com credencial institucional
-    r_ok = cliente.post(
-        f'{API}/usuarios/login',
-        json={'login': 'admin_observatorio', 'senha': 'aurora2026'}
-    )
-    assert r_ok.status_code == 200
-    dados = r_ok.json()
-    assert dados['autenticado'] is True
-    assert 'admin' in dados['papeis']
-    assert 'token' in dados
-    token = dados['token']
-
-    # Validação do perfil autenticado
-    r_eu = cliente.get(f'{API}/usuarios/eu', headers={'Authorization': f'Bearer {token}'})
-    assert r_eu.status_code == 200
-    assert r_eu.json()['autenticado'] is True
-    assert 'admin' in r_eu.json()['papeis']
+def test_senha_fixa_do_codigo_antigo_nao_entra(cliente):
+    """As credenciais que existiam escritas no código não funcionam mais."""
+    assert cliente.post(f'{API}/usuarios/login', json={'login': 'admin', 'senha': 'admin'}).status_code in (404, 405)
+    r = cliente.get(f'{API}/observatorio/relatorios', headers={'X-Admin-Token': 'aurora_admin_token_master_2026'})
+    assert r.status_code == 401
 
 
-def test_relatorio_observatorio_com_admin(cliente):
+def test_equipe_sem_papel_de_administrador_recebe_403(admin):
+    assert admin.post(API + '/usuarios/equipe', headers=CAB,
+                      json={'login': 'revisora', 'senha': SENHA, 'papel': 'moderacao'}).status_code == 201
+    admin.post(API + '/usuarios/sair', headers=CAB)
+    assert admin.post(API + '/usuarios/entrar', headers=CAB, json={'login': 'revisora', 'senha': SENHA}).status_code == 200
+    assert admin.get(f'{API}/observatorio/relatorios').status_code == 403
+
+
+def test_relatorio_observatorio_com_admin(admin):
+    cliente = admin
     """Acesso aos relatórios estruturados pelo Observatório com token de admin."""
-    headers = {'X-Admin-Token': 'aurora_admin_token_master_2026'}
+    headers = {}
     r = cliente.get(f'{API}/observatorio/relatorios', headers=headers)
     assert r.status_code == 200
     corpo = r.json()
@@ -101,9 +102,10 @@ def test_relatorio_observatorio_com_admin(cliente):
         assert 'cervezão' in item['bairro'].lower() or 'cervezão' in item['descricao_anonima'].lower()
 
 
-def test_retornos_secretaria_lgpd_e_desbloqueio(cliente):
+def test_retornos_secretaria_lgpd_e_desbloqueio(admin):
+    cliente = admin
     """Acesso restrito a retornos com mascaramento de dados sensíveis e auditoria LGPD."""
-    headers = {'Authorization': 'Bearer aurora_admin_token_master_2026'}
+    headers = CAB
 
     # 1. Consulta inicial com proteção LGPD (nome e telefone mascarados)
     r = cliente.get(f'{API}/observatorio/retornos', headers=headers)
@@ -132,9 +134,10 @@ def test_retornos_secretaria_lgpd_e_desbloqueio(cliente):
     assert 'CAM' in ultimo_acesso['justificativa']
 
 
-def test_registro_novo_despacho(cliente):
+def test_registro_novo_despacho(admin):
+    cliente = admin
     """Inserção de parecer técnico e atualização de status de caso."""
-    headers = {'Authorization': 'Bearer aurora_admin_token_master_2026'}
+    headers = CAB
     novo_despacho = {
         'orgao': 'Secretaria Municipal da Mulher',
         'status_novo': 'acolhida_cam',
@@ -152,9 +155,10 @@ def test_registro_novo_despacho(cliente):
     assert caso_atualizado['despachos'][0]['parecer_tecnico'] == novo_despacho['parecer_tecnico']
 
 
-def test_exportacao_csv_e_pdf(cliente):
+def test_exportacao_csv_e_pdf(admin):
+    cliente = admin
     """Exportação de relatórios em CSV e PDF por administrador."""
-    headers = {'Authorization': 'Bearer aurora_admin_token_master_2026'}
+    headers = CAB
 
     # CSV
     r_csv = cliente.get(f'{API}/observatorio/exportar/csv', headers=headers)
