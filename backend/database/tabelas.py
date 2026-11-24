@@ -5,7 +5,7 @@
 - percepcao: ``conjuntos_percepcao`` + ``percepcao_celulas``;
 - referência: ``conjuntos_referencia`` (geografia e metadados da rede de apoio) + ``pontos_apoio``.
 
-``votos``, ``moderacao_acoes``, ``usuarios`` e ``analises_ia`` são estruturas preparadas, sem rota na fase 1.
+``moderacao_acoes`` registra as decisões da equipe; ``votos``, ``analises_ia`` são estruturas preparadas; ``usuarios`` identifica somente a equipe.
 Nenhuma tabela guarda IP, nome, e-mail ou o texto original de um relato.
 
 As tabelas ``*_celulas`` e ``pontos_apoio`` têm ``ordem`` para o servidor devolver os objetos na ordem dos
@@ -169,11 +169,7 @@ class CelulaPercepcao(Base):
 
 
 class Usuario(Base):
-    """Estrutura preparada, sem rota na fase 1 (não existe autenticação).
-
-    Sem nome e sem e-mail: só um id, o papel (ex.: moderacao) e, se um dia houver login externo, o
-    identificador opaco que esse serviço devolver.
-    """
+    """Identidade da equipe. Credenciais ficam em tabela separada; relatos continuam anônimos."""
     __tablename__ = 'usuarios'
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True)
@@ -199,7 +195,7 @@ class Voto(Base):
 
 
 class AcaoModeracao(Base):
-    """Estrutura preparada, sem rota na fase 1: a moderação continua local, no aparelho.
+    """Histórico das decisões da equipe, aplicado às consultas públicas no servidor.
 
     ``acao`` segue o legado (ocultar ou verificar um relato, e desfazer).
     """
@@ -226,3 +222,18 @@ class AnaliseIA(Base):
     parametros: Mapped[dict[str, Any]] = mapped_column(JSON)
     resultado: Mapped[dict[str, Any]] = mapped_column(JSON)
     criado_em: Mapped[int] = mapped_column(BigInteger)
+
+
+class CredencialEquipe(Base):
+    """Acesso individual da equipe; separado dos relatos anônimos e da tabela legada."""
+    __tablename__ = 'equipe_credenciais'
+    usuario_id: Mapped[str] = mapped_column(ForeignKey('usuarios.id', ondelete='CASCADE'), primary_key=True)
+    login: Mapped[str] = mapped_column(String(64), unique=True)
+    senha_hash: Mapped[str] = mapped_column(String(256))
+
+
+class SessaoEquipe(Base):
+    __tablename__ = 'equipe_sessoes'
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    usuario_id: Mapped[str] = mapped_column(ForeignKey('usuarios.id', ondelete='CASCADE'), index=True)
+    expira_em: Mapped[int] = mapped_column(BigInteger, index=True)

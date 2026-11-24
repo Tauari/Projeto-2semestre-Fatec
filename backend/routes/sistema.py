@@ -13,7 +13,7 @@ from backend.services.processamento_dados import CHAVE_DADO_OFICIAL, CHAVE_PERCE
 router = APIRouter(tags=['sistema'])
 
 MODULOS = {'relatos': True, 'apoio': True, 'dados_oficiais': True, 'percepcao': True, 'dashboard': True, 'ia': True,
-           'moderacao': False, 'usuarios': False, 'relatorios': False}
+           'moderacao': True, 'usuarios': True, 'relatorios': True}
 
 
 @router.get('/saude', response_model=Saude)

@@ -23,9 +23,9 @@ def test_normalizar_url(url, esperado):
     assert normalizar_url(url) == esperado
 
 
-def test_as_13_tabelas_compilam_para_postgres():
+def test_as_tabelas_compilam_para_postgres():
     tabelas = Base.metadata.sorted_tables
-    assert len(tabelas) == 13
+    assert len(tabelas) == 15
     for t in tabelas:
         ddl = str(CreateTable(t).compile(dialect=postgresql.dialect()))
         assert t.name in ddl

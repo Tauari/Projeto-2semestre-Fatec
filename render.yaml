@@ -13,6 +13,8 @@ services:
         sync: false
       - key: AURORA_IA_PROVEDOR
         value: groq
+      - key: AURORA_SESSAO_COOKIE_SEGURO   # o login da equipe (Secretaria) só vale por HTTPS
+        value: "true"
       - key: AURORA_GROQ_API_KEY
         sync: false
       - key: AURORA_TELEGRAM_BOT_TOKEN   # aviso da patrulha no Telegram (opcional)

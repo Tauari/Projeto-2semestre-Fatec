@@ -66,9 +66,47 @@ Depois abra `http://localhost:8080/frontend/`. A versão original continua em `h
 | Dados oficiais (B.O.), pesquisa de percepção, geografia, rede de apoio | **Servidor**, cada tipo de evidência na sua rota e na sua tabela |
 | Classificação automática | **Servidor**. Fica numa tabela separada do relato e não muda os tipos escolhidos pela usuária. |
 | Extração do texto livre (IA) | Interface de provedor no servidor (`/api/v1/ia`). O provedor padrão são as mesmas regras de palavras-chave da versão original. Sem modelo de IA configurado, o texto do chat não sai do aparelho. |
-| Votos, moderação, áreas acompanhadas | Ainda no aparelho. A tela de moderação fica escondida quando há servidor, até a moderação ser migrada. |
+| Moderação | **Servidor**, com contas individuais da equipe; ocultar, mostrar e verificar persistem no banco. |
+| Votos e áreas acompanhadas | Ainda no aparelho. Sinalizações locais não entram na fila da equipe. |
 
 Configurações pendentes de decisão com o Observatório ficam em variáveis `AURORA_*` (veja `backend/config.py`). O padrão de cada uma reproduz o comportamento atual: por exemplo, `AURORA_RELATOS_RETENCAO_DIAS` (padrão: não apagar) e `AURORA_RELATOS_PRECISAO_CRIADO` (padrão: hora exata).
+
+## Painel de Moderação e equipe
+
+A equipe dispõe de visão geral com cards e gráficos, filtros de período e revisão de relatos. Administradores também exportam relatórios PDF e minutas agregadas de encaminhamento para revisão e envio manual. O chatbot aparece somente na área pública.
+
+**[Guia completo: instalação, primeiro administrador e uso passo a passo](docs/moderacao/README.md)**
+
+O desenvolvedor cria **uma única conta inicial de administrador** no servidor. Essa pessoa entra no painel e cadastra o restante da equipe, sem depender de alterações no código.
+
+```bash
+.venv/bin/python -m backend.criar_admin
+.venv/bin/python -m uvicorn backend.main:app --port 8000 --no-access-log
+```
+
+No Windows, use `.venv/Scripts/python`. O comando solicita usuário e senha sem exibir a senha no terminal, cria as tabelas que faltam e grava apenas um hash scrypt. Se já existir administrador, ele recusa criar outro e preserva as contas existentes. Execute apontando `AURORA_BANCO_URL` para o mesmo banco usado pelo servidor.
+
+Abra `http://localhost:8000/moderacao` diretamente no navegador. Entre com a conta inicial, abra **Equipe** e cadastre cada pessoa com usuário, senha de pelo menos 12 caracteres e permissão:
+
+| Permissão | O que pode fazer |
+| --- | --- |
+| Administrador | Revisar relatos, cadastrar moderadores e outros administradores, desativar/reativar moderadores. |
+| Moderador | Ocultar, mostrar, verificar e retirar a verificação de relatos. Não pode listar nem cadastrar contas. |
+
+Use senhas individuais e entregue a senha de cada pessoa por um canal privado. Contas administrativas não podem ser desativadas pelo painel, evitando perder o responsável. A chave compartilhada `AURORA_MODERACAO_CHAVE` foi substituída pelas contas individuais e não concede mais acesso.
+
+As sessões usam cookie HttpOnly e SameSite=Strict, duram oito horas (`AURORA_SESSAO_HORAS`, entre 1 e 24) e sobrevivem a recargas. **Sair da moderação** revoga a sessão no servidor; desativar uma conta revoga todos os acessos dela. Em produção, use HTTPS e `AURORA_SESSAO_COOKIE_SEGURO=true`. O painel é servido na mesma origem da API. Há limite de tentativas de login por conta e por processo; aplicações com vários processos precisam de limitação compartilhada na infraestrutura.
+
+O histórico de moderação registra usuário, ação e horário. As tabelas novas de credenciais e sessões são adicionadas na inicialização, preservando os relatos e a tabela de usuários existente. As ações antigas sem usuário continuam válidas.
+
+- **Ocultar/Mostrar**: retira/devolve o relato às consultas públicas, incluindo os relatos do resumo do dashboard. Ocultar prevalece sobre o selo de verificação.
+- **Verificar/Tirar verificação**: adiciona/remove o selo público da equipe.
+- **Atualizar relatos**: lê novamente o banco. O painel inclui relatos antigos dentro da retenção; o mapa mantém sua janela de dias.
+- Votos continuam locais, sem virar denúncias compartilhadas. A versão estática mantém a moderação local de demonstração. Quem envia relatos continua sem precisar de conta.
+
+API da equipe: `POST /api/v1/usuarios/entrar`, `POST /api/v1/usuarios/sair`, `GET /api/v1/usuarios/eu`, `GET/POST /api/v1/usuarios/equipe` e `POST /api/v1/usuarios/equipe/{id}/ativo`. Requisições que alteram acesso ou moderação exigem o cabeçalho `X-Aurora-Equipe: 1`, além da sessão quando aplicável. O servidor verifica o papel em cada operação.
+
+Testes de API: `.venv/bin/python -m pytest backend/tests/test_api_equipe.py backend/tests/test_api_moderacao.py`. Testes de navegador (Playwright e Chromium): `.venv/bin/python -m pytest tests/e2e/test_moderacao.py`. Os testes usam contas fictícias, servidor e banco temporários.
 
 ## Link publicado × arquivo hospedado
 
@@ -178,6 +216,13 @@ Cuidados: no plano grátis o servidor do Render **dorme** quando ninguém usa (o
 servidor de terceiros, o que entra na conversa de LGPD com o Observatório. Os relatos de teste do SQLite local não migram sozinhos; o banco
 novo começa vazio. Os dados são os mesmos de `dados/`, que o servidor carrega a cada subida.
 
+### Painel da Secretaria (equipe) na nuvem
+
+A moderação e a visão geral da Secretaria ficam em `/moderacao` e exigem login. Não existe senha padrão: o primeiro responsável é criado
+com `python -m backend.criar_admin`, que grava no banco apontado por `AURORA_BANCO_URL`. No Render grátis não há terminal, então rode esse comando
+**no seu computador**, com a string do Neon em `AURORA_BANCO_URL` no `.env`, antes de entrar pela primeira vez no site do Render. O `render.yaml` já liga
+`AURORA_SESSAO_COOKIE_SEGURO`, porque o login só funciona por HTTPS. O guia completo está em `docs/moderacao/README.md`.
+
 ## Como atualizar os dados
 
 Precisa de Python 3 (sem bibliotecas extras).
@@ -203,7 +248,7 @@ Violência doméstica acontece sobretudo dentro de casa. Por isso o app apresent
 
 ## O que falta para um lançamento público
 
-1. **Banco compartilhado.** Em andamento na nova versão: o servidor FastAPI (`backend/`) já guarda os relatos num banco (SQLite por padrão; para Postgres, basta trocar `AURORA_BANCO_URL`). Ainda falta hospedar o servidor e migrar votos e moderação para ele.
+1. **Banco compartilhado.** Em andamento na nova versão: o servidor FastAPI (`backend/`) já guarda os relatos num banco (SQLite por padrão; para Postgres, basta trocar `AURORA_BANCO_URL`). Ainda falta hospedar o servidor e migrar os votos para ele.
 2. **Moderação de verdade**: definir com o Observatório quem modera e em quanto tempo.
 3. **Confirmar a rede de apoio com cada serviço**: endereços, telefones e horários foram reunidos em 24/09/2026 em páginas oficiais, mas algumas listas estavam desatualizadas. Pontos a checar primeiro: o horário da DDM, onde funciona o plantão da Polícia Civil fora do horário da DDM (ficou fora do mapa por falta de endereço confirmado), se o CREAS 2 (Rua 8, 3131) ainda existe e a posição do CRAS Panorama. A Secretaria da Mulher deve mudar para a Av. Visconde do Rio Claro com a Av. 26 no início de 2027.
 4. **LGPD**: termo de uso, política de privacidade e um canal para pedir remoção de relatos. Relatos podem conter dados sensíveis mesmo com a limpeza automática.
@@ -212,3 +257,5 @@ Violência doméstica acontece sobretudo dentro de casa. Por isso o app apresent
 ## Créditos
 
 Mapa: Leaflet (licença BSD-2). Dados do mapa © colaboradores do OpenStreetMap, licença ODbL. Fontes: Atkinson Hyperlegible e Bricolage Grotesque (Google Fonts). Rede de apoio: Prefeitura de Rio Claro, Tribunal de Justiça de SP, Defensoria Pública de SP e Fundação Municipal de Saúde de Rio Claro.
+
+Demonstração atualizada: [vídeo completo, prints e PDFs do novo painel](entregas/painel-atualizado/README.md).
